@@ -33,8 +33,14 @@ Muted editorial palette (per user request — **no neon**): warm off-white ink `
 - Scene: glass platforms + glowing sphere nodes sized by sqrt(market cap), bezier edges with animated flow particles, star field. Raycast hover/click → detail panel. GSAP camera flights for tours/focus.
 - Reduced-motion path disables autorotate/particles/intro animation. PixelRatio capped at 2.
 
+## Deployment
+- **Live: https://the-machine-uf1s.onrender.com** (Render static site `the-machine`, srv-d8m2hu0g4nts7380n53g; auto-deploys from `main` of github.com/ThinkingAndTinkering/ai-ecosystem-explorer).
+- Routes: `/` = The Machine · `/explorer.html` = 3D Explorer · `/handbook.pdf` · `/handbook.md`.
+- `build-site.sh` assembles `dist/` (copies + repoints The Machine's footer link from index.html → explorer.html). To ship changes: edit → rebuild PDF if handbook changed → `git commit` → `git push` (Render auto-builds).
+- `.gitignore` excludes dist/, verify screenshots, and the print-intermediate HTML.
+
 ## Status
-- Complete: research, handbook, app, verification harness. Not deployed (local file). Could be deployed as a Render/Netlify static site if wanted.
+- Complete: research, handbook (2nd ed.), both apps, verification harness, deployed.
 
 ## TODOs / Known Issues
 - Data snapshot will age; "as of" stamps included everywhere.
