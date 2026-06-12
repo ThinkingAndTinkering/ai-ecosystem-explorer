@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>AI Ecosystem Explorer — June 2026</title>
+<meta name="description" content="An interactive 3D map of the AI ecosystem: equipment, fabs, chips, clouds, models, and applications — with the supply lines and money flows between them. Data as of June 11, 2026.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,420;9..144,560&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0f14; --bg2:#13161d; --ink:#e7e4db; --ink-dim:#a39f93; --ink-faint:#6b6c72;
+  --glass:rgba(20,22,29,.78); --glass-2:rgba(28,30,38,.6); --stroke:rgba(231,228,219,.1);
+  --accent:#8b9bc4; --accent2:#9db3a4; --gold:#c0a468; --rose:#b48794; --green:#7fa98a;
+  --shadow:0 18px 50px rgba(0,0,0,.45);
+  --l0:#7c97b5; --l1:#7da794; --l2:#9a8cb5; --l3:#b48794; --l4:#c0a468; --l5:#8aa179;
+  --r-lg:18px; --r-md:13px; --r-sm:9px;
+}
+body.light{
+  --bg:#f4f1ea; --bg2:#ebe7dd; --ink:#23262e; --ink-dim:#565a64; --ink-faint:#8f9097;
+  --glass:rgba(252,250,244,.85); --glass-2:rgba(255,255,255,.65); --stroke:rgba(35,38,46,.13);
+  --accent:#56648f; --accent2:#5d7a68;
+  --shadow:0 18px 50px rgba(70,60,30,.16);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--ink);transition:background .5s}
+button{font-family:inherit;color:inherit;background:none;border:none;cursor:pointer}
+::-webkit-scrollbar{width:9px;height:9px}::-webkit-scrollbar-thumb{background:rgba(128,136,170,.35);border-radius:99px}::-webkit-scrollbar-track{background:transparent}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+
+#stage{position:fixed;inset:0;z-index:0}
+#stage canvas{display:block}
+
+/* ---------- top bar ---------- */
+.topbar{position:fixed;top:0;left:0;right:0;z-index:30;display:flex;align-items:center;gap:14px;
+  padding:max(10px,env(safe-area-inset-top)) 18px 10px;pointer-events:none}
+.topbar>*{pointer-events:auto}
+.brand{display:flex;align-items:center;gap:11px;user-select:none}
+.brand .mark{width:34px;height:34px;border-radius:10px;flex:none;
+  background:conic-gradient(from 210deg,var(--l0),var(--l2),var(--l3),var(--l4),var(--l5),var(--l0));
+  -webkit-mask:radial-gradient(circle at 50% 50%,transparent 31%,#000 33%);mask:radial-gradient(circle at 50% 50%,transparent 31%,#000 33%);
+  animation:spin 24s linear infinite;opacity:.9}
+@keyframes spin{to{transform:rotate(360deg)}}
+.brand h1{font-family:'Fraunces',serif;font-weight:420;font-size:19px;letter-spacing:.02em;white-space:nowrap}
+.brand .ed{display:block;font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.22em;color:var(--ink-faint);text-transform:uppercase;margin-top:1px}
+.searchwrap{position:relative;flex:1;max-width:340px;min-width:130px}
+.searchwrap input{width:100%;padding:9px 14px 9px 34px;border-radius:99px;border:1px solid var(--stroke);
+  background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:var(--ink);font-size:13.5px}
+.searchwrap input::placeholder{color:var(--ink-faint)}
+.searchwrap .ic{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--ink-faint);font-size:13px}
+.results{position:absolute;top:calc(100% + 8px);left:0;right:0;max-height:300px;overflow:auto;border-radius:var(--r-md);
+  background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--stroke);box-shadow:var(--shadow);display:none}
+.results.open{display:block}
+.results button{display:flex;width:100%;align-items:center;gap:10px;padding:9px 13px;font-size:13px;text-align:left}
+.results button:hover,.results button.active{background:rgba(139,155,196,.16)}
+.results .dot{width:8px;height:8px;border-radius:99px;flex:none}
+.results .tic{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--ink-faint)}
+.navbtns{display:flex;gap:8px;margin-left:auto}
+.pill{display:flex;align-items:center;gap:7px;padding:9px 15px;border-radius:99px;font-size:12.5px;font-weight:600;letter-spacing:.02em;
+  border:1px solid var(--stroke);background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  color:var(--ink-dim);transition:all .22s;white-space:nowrap}
+.pill:hover{color:var(--ink);border-color:rgba(139,155,196,.55);transform:translateY(-1px)}
+.pill.on{color:var(--ink);background:rgba(139,155,196,.2);border-color:rgba(139,155,196,.55)}
+.pill.icon{padding:9px 12px}
+
+/* ---------- legend ---------- */
+#legend{position:fixed;left:18px;top:50%;transform:translateY(-50%);z-index:25;display:flex;flex-direction:column;gap:6px;
+  padding:14px;border-radius:var(--r-lg);background:var(--glass);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  border:1px solid var(--stroke);box-shadow:var(--shadow);max-width:228px}
+#legend .ttl{font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:5px}
+.lchip{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:var(--r-sm);font-size:12.5px;font-weight:500;color:var(--ink-dim);transition:all .18s;text-align:left;width:100%}
+.lchip:hover{background:rgba(139,155,196,.12);color:var(--ink)}
+.lchip .sw{width:11px;height:11px;border-radius:4px;flex:none}
+.lchip .n{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-faint);margin-left:auto}
+.lchip.off{opacity:.32;filter:saturate(0)}
+#legend .div{height:1px;background:var(--stroke);margin:7px 0}
+.togglerow{display:flex;align-items:center;gap:9px;padding:5px 9px;font-size:12px;color:var(--ink-dim)}
+.sw2{position:relative;width:30px;height:17px;border-radius:99px;background:rgba(128,136,170,.3);transition:.2s;flex:none}
+.sw2.on{background:var(--accent)}
+.sw2::after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:99px;background:#fff;transition:.2s}
+.sw2.on::after{left:15px}
+
+/* ---------- detail panel ---------- */
+#panel{position:fixed;right:18px;top:74px;bottom:18px;width:min(390px,calc(100vw - 36px));z-index:28;
+  border-radius:var(--r-lg);background:var(--glass);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);
+  border:1px solid var(--stroke);box-shadow:var(--shadow);display:flex;flex-direction:column;
+  transform:translateX(calc(100% + 30px));transition:transform .45s cubic-bezier(.22,1,.36,1)}
+#panel.open{transform:none}
+#panel .head{padding:18px 20px 14px;border-bottom:1px solid var(--stroke);position:relative}
+#panel .close{position:absolute;top:13px;right:13px;width:30px;height:30px;border-radius:99px;display:grid;place-items:center;color:var(--ink-faint);font-size:17px;border:1px solid var(--stroke)}
+#panel .close:hover{color:var(--ink);background:rgba(255,80,100,.12)}
+#panel .tags{display:flex;gap:7px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+.tag{font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;padding:4px 9px;border-radius:99px;border:1px solid var(--stroke);color:var(--ink-dim)}
+.tag.layer{border:none;color:#15171d;font-weight:600}
+#panel h2{font-family:'Fraunces',serif;font-weight:560;font-size:25px;line-height:1.1;letter-spacing:.01em}
+#panel .sub{font-size:12.5px;color:var(--ink-dim);margin-top:5px}
+#panel .body{flex:1;overflow-y:auto;padding:16px 20px 20px}
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:4px 0 15px}
+.metric{padding:11px 12px;border-radius:var(--r-md);background:var(--glass-2);border:1px solid var(--stroke)}
+.metric .k{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint)}
+.metric .v{font-family:'Fraunces',serif;font-size:20px;font-weight:560;margin-top:3px}
+.metric .s{font-size:10.5px;color:var(--ink-dim);margin-top:2px}
+.metric .v .up{color:var(--green)} .metric .v .dn{color:#c1726d}
+#panel p.desc{font-size:13.5px;line-height:1.65;color:var(--ink-dim)}
+#panel h4{font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-faint);margin:16px 0 8px}
+.sr li{font-size:12.8px;line-height:1.55;color:var(--ink-dim);margin:5px 0 5px 16px}
+.sr.good li::marker{content:"▲  ";color:var(--green);font-size:10px}
+.sr.bad li::marker{content:"▼  ";color:#c1726d;font-size:10px}
+.deps{display:flex;flex-wrap:wrap;gap:7px}
+.dep{font-size:11.5px;padding:5px 11px;border-radius:99px;border:1px solid var(--stroke);background:var(--glass-2);color:var(--ink-dim);transition:.18s}
+.dep:hover{border-color:var(--accent);color:var(--ink);transform:translateY(-1px)}
+#panel .src{margin-top:16px;padding-top:12px;border-top:1px dashed var(--stroke);font-size:10.5px;color:var(--ink-faint);line-height:1.6}
+
+/* ---------- tooltip ---------- */
+#tip{position:fixed;z-index:40;pointer-events:none;padding:8px 12px;border-radius:10px;background:var(--glass);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--stroke);box-shadow:var(--shadow);
+  font-size:12px;opacity:0;transition:opacity .15s;max-width:240px}
+#tip b{font-family:'Fraunces',serif;font-weight:560;font-size:14px;display:block}
+#tip span{color:var(--ink-dim);font-size:11px}
+
+/* ---------- hint footer ---------- */
+#hint{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:20;font-family:'JetBrains Mono',monospace;
+  font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-faint);text-align:center;pointer-events:none;white-space:nowrap}
+
+/* ---------- tour bar ---------- */
+#tourbar{position:fixed;left:50%;bottom:26px;transform:translate(-50%,140%);z-index:35;width:min(620px,calc(100vw - 32px));
+  border-radius:var(--r-lg);background:var(--glass);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);
+  border:1px solid var(--stroke);box-shadow:var(--shadow);padding:18px 20px 14px;transition:transform .55s cubic-bezier(.22,1,.36,1)}
+#tourbar.open{transform:translate(-50%,0)}
+#tourbar .tt{font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent2);margin-bottom:6px}
+#tourbar h3{font-family:'Fraunces',serif;font-size:19px;font-weight:560;margin-bottom:6px}
+#tourbar p{font-size:13px;line-height:1.6;color:var(--ink-dim);min-height:42px}
+#tourbar .row{display:flex;align-items:center;gap:10px;margin-top:12px}
+#tourbar .dots{display:flex;gap:5px;flex:1}
+#tourbar .dots i{width:7px;height:7px;border-radius:99px;background:rgba(128,136,170,.3);transition:.25s}
+#tourbar .dots i.on{background:var(--accent);transform:scale(1.25)}
+.tbtn{padding:8px 16px;border-radius:99px;border:1px solid var(--stroke);font-size:12.5px;font-weight:600;color:var(--ink-dim);transition:.2s}
+.tbtn:hover{color:var(--ink);border-color:var(--accent)}
+.tbtn.primary{background:linear-gradient(135deg,var(--accent),#5e6ad2);color:#fff;border:none}
+.tbtn.primary:hover{filter:brightness(1.12)}
+
+/* ---------- overlays (tours menu / timeline / table / help) ---------- */
+.overlay{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;
+  background:color-mix(in srgb,var(--bg) 62%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);padding:20px}
+.overlay.open{display:flex}
+.sheet{width:min(960px,100%);max-height:min(82vh,760px);display:flex;flex-direction:column;border-radius:22px;
+  background:var(--glass);border:1px solid var(--stroke);box-shadow:var(--shadow);overflow:hidden;
+  backdrop-filter:blur(26px);-webkit-backdrop-filter:blur(26px)}
+.sheet .shead{display:flex;align-items:center;gap:12px;padding:18px 22px;border-bottom:1px solid var(--stroke)}
+.sheet .shead h3{font-family:'Fraunces',serif;font-size:21px;font-weight:560}
+.sheet .shead .x{margin-left:auto;width:32px;height:32px;border-radius:99px;display:grid;place-items:center;border:1px solid var(--stroke);color:var(--ink-faint);font-size:17px}
+.sheet .shead .x:hover{color:var(--ink);background:rgba(255,80,100,.12)}
+.sheet .sbody{flex:1;overflow:auto;padding:20px 22px}
+.tourcard{display:flex;gap:16px;align-items:flex-start;width:100%;text-align:left;padding:17px;border-radius:var(--r-lg);
+  border:1px solid var(--stroke);background:var(--glass-2);margin-bottom:12px;transition:.22s}
+.tourcard:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:var(--shadow)}
+.tourcard .num{font-family:'Fraunces',serif;font-size:30px;font-weight:300;color:var(--accent);line-height:1;min-width:38px}
+.tourcard h4{font-family:'Fraunces',serif;font-size:17px;font-weight:560;margin-bottom:4px}
+.tourcard p{font-size:12.8px;color:var(--ink-dim);line-height:1.55}
+.tourcard .meta{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-faint);margin-top:7px;letter-spacing:.1em}
+
+/* timeline */
+#tlwrap{display:flex;gap:14px;overflow-x:auto;padding:6px 2px 14px;scroll-snap-type:x proximity}
+.tcard{scroll-snap-align:start;flex:0 0 235px;padding:15px 16px;border-radius:var(--r-lg);border:1px solid var(--stroke);background:var(--glass-2);position:relative}
+.tcard::before{content:"";position:absolute;top:-1px;left:16px;right:auto;width:34px;height:2px;background:var(--c,var(--accent))}
+.tcard .yr{font-family:'Fraunces',serif;font-size:24px;font-weight:560;color:var(--c,var(--accent))}
+.tcard .er{font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-faint);margin:2px 0 7px}
+.tcard h5{font-size:13px;font-weight:600;margin-bottom:5px;line-height:1.35}
+.tcard p{font-size:11.6px;color:var(--ink-dim);line-height:1.5}
+
+/* table */
+.tbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.tbar .note{font-size:11px;color:var(--ink-faint);margin-right:auto}
+table{width:100%;border-collapse:collapse;font-size:12.6px}
+thead th{position:sticky;top:-20px;background:var(--bg2);text-align:left;font-family:'JetBrains Mono',monospace;font-size:9.5px;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);padding:10px 10px;border-bottom:1px solid var(--stroke);cursor:pointer;user-select:none;white-space:nowrap}
+thead th:hover{color:var(--ink)}
+tbody td{padding:9px 10px;border-bottom:1px solid var(--stroke);color:var(--ink-dim);white-space:nowrap}
+tbody tr{cursor:pointer;transition:background .15s}
+tbody tr:hover{background:rgba(139,155,196,.1)}
+tbody td:first-child{color:var(--ink);font-weight:600}
+td .ldot{display:inline-block;width:8px;height:8px;border-radius:3px;margin-right:8px;vertical-align:0}
+td.mono,th.r{font-family:'JetBrains Mono',monospace;font-size:11.5px}
+.up{color:var(--green)} .dn{color:#c1726d}
+
+/* help */
+#help .sbody{font-size:13.5px;line-height:1.75;color:var(--ink-dim)}
+#help kbd{font-family:'JetBrains Mono',monospace;font-size:10.5px;padding:2px 7px;border-radius:6px;border:1px solid var(--stroke);background:var(--glass-2);color:var(--ink)}
+#help h4{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-faint);margin:16px 0 6px}
+
+/* ---------- intro ---------- */
+#intro{position:fixed;inset:0;z-index:80;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:radial-gradient(120% 90% at 50% 10%,rgba(139,155,196,.1),transparent 60%),var(--bg);text-align:center;padding:24px;transition:opacity .9s}
+#intro.hide{opacity:0;pointer-events:none}
+#intro .kicker{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.34em;text-transform:uppercase;color:var(--accent2);margin-bottom:18px}
+#intro h2{font-family:'Fraunces',serif;font-weight:300;font-size:clamp(40px,7.5vw,84px);line-height:1.04;letter-spacing:-.01em;
+  background:linear-gradient(115deg,#e7e4db 35%,#8b9bc4 58%,#c0a468 78%,#e7e4db 96%);-webkit-background-clip:text;background-clip:text;color:transparent;background-size:220% 100%;animation:sheen 9s ease infinite}
+body.light #intro h2{background:linear-gradient(115deg,#23262e 35%,#56648f 58%,#8a734a 78%,#23262e 96%);-webkit-background-clip:text;background-clip:text;color:transparent}
+@keyframes sheen{0%,100%{background-position:0% 0}50%{background-position:100% 0}}
+#intro .lede{max-width:560px;margin:22px auto 30px;font-size:15.5px;line-height:1.7;color:var(--ink-dim)}
+#intro .enter{font-size:14px;font-weight:600;letter-spacing:.06em;padding:15px 38px;border-radius:99px;color:#f4f1ea;
+  background:linear-gradient(135deg,#67759e,#4c5878);box-shadow:0 10px 32px rgba(76,88,120,.45);transition:.25s}
+#intro .enter:hover{transform:translateY(-2px) scale(1.02);box-shadow:0 16px 44px rgba(76,88,120,.6)}
+#intro .fine{position:absolute;bottom:max(20px,env(safe-area-inset-bottom));font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint)}
+#intro .stack-mini{display:flex;gap:9px;margin-bottom:26px}
+#intro .stack-mini i{width:38px;height:7px;border-radius:99px;opacity:.9;animation:rise 1.2s cubic-bezier(.22,1,.36,1) backwards}
+@keyframes rise{from{transform:translateY(14px);opacity:0}}
+
+/* ---------- responsive ---------- */
+#legendToggle{display:none}
+@media (max-width:900px){
+  .brand h1{font-size:15px}.brand .ed{display:none}
+  .navbtns .pill .lbl{display:none}.navbtns .pill{padding:9px 12px}
+  #legend{left:12px;right:auto;top:auto;bottom:max(12px,env(safe-area-inset-bottom));transform:none;max-width:200px;display:none}
+  #legend.open{display:flex}
+  #legendToggle{display:flex;position:fixed;left:12px;bottom:max(12px,env(safe-area-inset-bottom));z-index:26}
+  #legend.open ~ #legendToggle, body.legend-open #legendToggle{bottom:auto}
+  #panel{left:12px;right:12px;top:auto;bottom:0;width:auto;max-height:62vh;border-radius:22px 22px 0 0;
+    transform:translateY(110%)}
+  #panel.open{transform:none}
+  #hint{display:none}
+  #tourbar{bottom:max(12px,env(safe-area-inset-bottom))}
+  .metrics{grid-template-columns:1fr 1fr}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001s !important;transition-duration:.15s !important}
+}
+</style>
+</head>
+<body>
+
+<div id="stage" aria-label="3D map of the AI ecosystem: six stacked layers with company nodes and connection lines. Use the data table for an accessible alternative." role="img"></div>
+
+<header class="topbar">
+  <div class="brand"><div class="mark" aria-hidden="true"></div>
+    <h1>AI Ecosystem Explorer<span class="ed">Edition · June 2026</span></h1>
+  </div>
+  <div class="searchwrap">
+    <span class="ic" aria-hidden="true">⌕</span>
+    <input id="search" type="text" placeholder="Search companies, tickers, layers…" autocomplete="off" aria-label="Search companies">
+    <div class="results" id="results" role="listbox"></div>
+  </div>
+  <nav class="navbtns" aria-label="Views">
+    <button class="pill" id="btnTours">🧭 <span class="lbl">Tours</span></button>
+    <button class="pill" id="btnTimeline">🕰 <span class="lbl">Timeline</span></button>
+    <button class="pill" id="btnTable">▦ <span class="lbl">Data</span></button>
+    <button class="pill icon" id="btnTheme" aria-label="Toggle dark / light theme">◐</button>
+    <button class="pill icon" id="btnHelp" aria-label="Help">?</button>
+  </nav>
+</header>
+
+<button class="pill" id="legendToggle">☰ Layers</button>
+<aside id="legend" aria-label="Layer filters">
+  <div class="ttl">Stack Layers · click to filter</div>
+  <div id="layerchips"></div>
+  <div class="div"></div>
+  <button class="togglerow" id="edgeToggle" style="width:100%"><span class="sw2 on" id="edgeSw"></span> Connections</button>
+  <button class="togglerow" id="flowToggle" style="width:100%"><span class="sw2 on" id="flowSw"></span> Flow particles</button>
+</aside>
+
+<aside id="panel" aria-label="Company details">
+  <div class="head">
+    <button class="close" id="panelClose" aria-label="Close details">✕</button>
+    <div class="tags" id="pTags"></div>
+    <h2 id="pName">—</h2>
+    <div class="sub" id="pSub"></div>
+  </div>
+  <div class="body">
+    <div class="metrics" id="pMetrics"></div>
+    <p class="desc" id="pDesc"></p>
+    <h4>Strengths</h4><ul class="sr good" id="pStr"></ul>
+    <h4>Risks</h4><ul class="sr bad" id="pRisk"></ul>
+    <h4>Connected to</h4><div class="deps" id="pDeps"></div>
+    <div class="src" id="pSrc"></div>
+  </div>
+</aside>
+
+<div id="tip" role="tooltip"></div>
+<div id="hint">drag to orbit · scroll to zoom · click a node · <span style="opacity:.7">esc closes</span></div>
+
+<div id="tourbar" aria-live="polite">
+  <div class="tt" id="tourKicker">Guided tour</div>
+  <h3 id="tourTitle">—</h3>
+  <p id="tourText">—</p>
+  <div class="row">
+    <button class="tbtn" id="tourExit">Exit</button>
+    <div class="dots" id="tourDots"></div>
+    <button class="tbtn" id="tourPrev">←</button>
+    <button class="tbtn primary" id="tourNext">Next →</button>
+  </div>
+</div>
+
+<div class="overlay" id="toursOverlay" role="dialog" aria-modal="true" aria-label="Guided tours">
+  <div class="sheet" style="width:min(640px,100%)">
+    <div class="shead"><h3>Guided Tours</h3><button class="x" data-close="toursOverlay">✕</button></div>
+    <div class="sbody" id="tourList"></div>
+  </div>
+</div>
+
+<div class="overlay" id="timelineOverlay" role="dialog" aria-modal="true" aria-label="AI timeline">
+  <div class="sheet">
+    <div class="shead"><h3>1950 → 2026 · How we got here</h3><button class="x" data-close="timelineOverlay">✕</button></div>
+    <div class="sbody"><div id="tlwrap"></div>
+      <p style="font-size:11px;color:var(--ink-faint);margin-top:10px">Scroll horizontally · milestones mirror Chapter 1 of the companion handbook.</p>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="tableOverlay" role="dialog" aria-modal="true" aria-label="Data table">
+  <div class="sheet">
+    <div class="shead"><h3>The Dataset</h3><button class="x" data-close="tableOverlay">✕</button></div>
+    <div class="sbody">
+      <div class="tbar">
+        <span class="note">Market caps: June 11, 2026 close (stockanalysis.com) · private valuations as dated · click a row to fly to it · click headers to sort</span>
+        <button class="tbtn" id="expCsv">⤓ CSV</button>
+        <button class="tbtn" id="expJson">⤓ JSON</button>
+        <button class="tbtn" id="expPng">⤓ Scene PNG</button>
+      </div>
+      <table id="dataTable"><thead></thead><tbody></tbody></table>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="help" role="dialog" aria-modal="true" aria-label="Help">
+  <div class="sheet" style="width:min(560px,100%)">
+    <div class="shead"><h3>How to explore</h3><button class="x" data-close="help">✕</button></div>
+    <div class="sbody">
+      <h4>The map</h4>
+      Six floating platforms = the AI technology stack, bottom to top: <b style="color:var(--l0)">Design &amp; Equipment</b>, <b style="color:var(--l1)">Fabrication &amp; Memory</b>, <b style="color:var(--l2)">Chips</b>, <b style="color:var(--l3)">Cloud &amp; Data Centers</b>, <b style="color:var(--l4)">Models</b>, <b style="color:var(--l5)">Applications</b>. Spheres are sized by market value; gems are private labs. Lines are real relationships — supply, manufacturing, cloud contracts, investments — with particles flowing in the direction of supply.
+      <h4>Controls</h4>
+      Drag to orbit · scroll / pinch to zoom · right-drag to pan · click any node for its dossier · <kbd>esc</kbd> closes panels · <kbd>/</kbd> focuses search · <kbd>t</kbd> tours · <kbd>d</kbd> data table.
+      <h4>Provenance</h4>
+      Built as the companion to <i>Understanding the AI Ecosystem: A Beginner's Handbook</i> (June 2026 edition). All figures dated June 11, 2026; sources listed in the handbook's references. Educational use only — not investment advice.
+    </div>
+  </div>
+</div>
+
+<div id="intro">
+  <div class="stack-mini" aria-hidden="true">
+    <i style="background:var(--l0);animation-delay:.05s"></i><i style="background:var(--l1);animation-delay:.15s"></i><i style="background:var(--l2);animation-delay:.25s"></i><i style="background:var(--l3);animation-delay:.35s"></i><i style="background:var(--l4);animation-delay:.45s"></i><i style="background:var(--l5);animation-delay:.55s"></i>
+  </div>
+  <div class="kicker">From sand · to chips · to clouds · to minds</div>
+  <h2>The AI Ecosystem,<br>in one living map</h2>
+  <p class="lede">Thirty-six companies. Six layers. One machine that turns silicon and electricity into intelligence — and ~$700 billion a year into question marks. Explore who makes what, who pays whom, and where it could all break.</p>
+  <button class="enter" id="enterBtn">Enter the Ecosystem</button>
+  <div class="fine">Data as of June 11, 2026 · educational use · not investment advice</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
+<script type="importmap">
+{"imports":{
+  "three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+
+/* ============================== DATA ==============================
+   All figures as of June 11, 2026 close (stockanalysis.com) or latest
+   reported quarter. Mirrors Chapter 4 of the companion handbook.    */
+
+const ASOF = 'June 11, 2026';
+
+const LAYERS = [
+  {name:'Design & Equipment',  color:0x7c97b5, css:'var(--l0)', hex:'#7c97b5', blurb:'The tools that make chipmaking possible'},
+  {name:'Fabrication & Memory',color:0x7da794, css:'var(--l1)', hex:'#7da794', blurb:'The factories that print chips & the memory that feeds them'},
+  {name:'Chips & Accelerators',color:0x9a8cb5, css:'var(--l2)', hex:'#9a8cb5', blurb:'The processors that run AI math'},
+  {name:'Cloud & Data Centers',color:0xb48794, css:'var(--l3)', hex:'#b48794', blurb:'Warehouse-scale computers & the rental model'},
+  {name:'Models & Intelligence',color:0xc0a468,css:'var(--l4)', hex:'#c0a468', blurb:'The labs that train and sell intelligence'},
+  {name:'Applications & Devices',color:0x8aa179,css:'var(--l5)',hex:'#8aa179', blurb:'Where AI meets people'}
+];
+
+/* kind: public | private | sub.  cap in $B (market cap, or last-round valuation for privates). */
+const COMPANIES = [
+/* —— L0 Design & Equipment —— */
+{id:'asml',name:'ASML',ticker:'ASML',layer:0,kind:'public',hq:'Netherlands',cap:699,
+ rev:{l:'Q1 2026 revenue',v:'€8.8B',g:'+13%'},gn:13,
+ role:'Sole maker of EUV lithography machines',
+ desc:'The only company on Earth that builds the extreme-ultraviolet lithography machines required to print advanced chips. Every leading-edge fab — TSMC, Samsung, Intel — queues for its ~$200–400M tools; EUV export to China is banned outright.',
+ str:['Literal monopoly at the leading edge','€36–40B 2026 guidance, raised','Every chip roadmap routes through it'],
+ risk:['Export-control whiplash (China fell to 19% of sales)','Customer capex cycles','TSMC skipping High-NA for its 2028 node']},
+{id:'amat',name:'Applied Materials',ticker:'AMAT',layer:0,kind:'public',hq:'USA',cap:439,
+ rev:{l:'FQ2 2026 revenue',v:'$7.9B',g:'+11%'},gn:11,
+ role:'Broadest portfolio of chip-fab equipment',
+ desc:'Makes the deposition, etch, implant and polishing systems that fabs run between lithography steps — thousands of passes per wafer. Expects its semiconductor business to grow >30% in calendar 2026 on AI demand.',
+ str:['Widest equipment portfolio','Record quarters through the boom','Wins whoever wins the fab race'],
+ risk:['China export restrictions','Cyclical end-markets','Memory capex can reverse violently']},
+{id:'lrcx',name:'Lam Research',ticker:'LRCX',layer:0,kind:'public',hq:'USA',cap:453,
+ rev:{l:'Mar-Q 2026 revenue',v:'$5.8B',g:'record'},gn:null,
+ role:'Etch & deposition leader (memory-heavy)',
+ desc:'Specialist in etch and deposition — carving and layering the nanoscale structures of chips, with deep exposure to memory fabs. The 2026 memory supercycle made it one of the year\'s great winners: the stock more than quadrupled in twelve months.',
+ str:['Memory-fab king in a memory boom','+322% twelve-month stock run','Record revenue and margins'],
+ risk:['Most cyclical of the equipment trio','China restrictions','Priced for the supercycle to persist']},
+{id:'klac',name:'KLA',ticker:'KLAC',layer:0,kind:'public',hq:'USA',cap:315,
+ rev:{l:'FQ3 2026 revenue',v:'$3.4B',g:'above guide'},gn:null,
+ role:'Inspection & metrology (~half that market)',
+ desc:'The industry\'s quality-control department: optical inspection and measurement systems that find atomic-scale defects. As chips get harder to print, the share of fab budgets spent on checking them keeps rising.',
+ str:['>50% share of process control','Rising inspection intensity per node','High margins, sticky installed base'],
+ risk:['Cyclicality','China exposure','Smaller TAM than peers']},
+{id:'snps',name:'Synopsys',ticker:'SNPS',layer:0,kind:'public',hq:'USA',cap:87,
+ rev:{l:'FQ2 2026 revenue',v:'$2.3B',g:'+39% ttm'},gn:39,
+ role:'Chip-design software (EDA) #1 · now + Ansys',
+ desc:'Half of the EDA duopoly: the software in which every advanced processor is designed and verified. Closed the $35B Ansys acquisition (2025) to add physics simulation — designing chips, and now the systems around them.',
+ str:['Duopoly with Cadence','AI chips can\'t exist without EDA','Ansys broadens the moat'],
+ risk:['Integration of largest-ever design-software deal','China license rules','Customer concentration in big designers']},
+{id:'cdns',name:'Cadence',ticker:'CDNS',layer:0,kind:'public',hq:'USA',cap:106,
+ rev:{l:'Q1 2026 revenue',v:'$1.5B',g:'+19%'},gn:19,
+ role:'Chip-design software (EDA) #2',
+ desc:'The other half of the EDA duopoly — design, verification and increasingly AI-assisted chip layout tools. Raised 2026 guidance on AI-driven design starts; every custom XPU program is a customer.',
+ str:['Duopoly economics','Custom-silicon wave = more design starts','44%+ operating margins'],
+ risk:['China export rules','Rich multiple','Big-customer in-housing of tools']},
+{id:'arm',name:'Arm',ticker:'ARM',layer:0,kind:'public',hq:'UK',cap:366,
+ rev:{l:'FY2026 revenue',v:'$4.9B',g:'+23%'},gn:23,
+ role:'CPU architecture licensed across the industry',
+ desc:'Doesn\'t fabricate anything — licenses the instruction set inside ~99% of smartphones and, now, the data center: AWS Graviton, NVIDIA Grace and Microsoft Cobalt are all Arm. Data-center royalties doubled in FY26, and it is now designing its own server CPU (>$2B demand booked) — stepping from referee toward player.',
+ str:['Royalty on nearly every device','Data-center royalties doubling','Neutral standard everyone builds on'],
+ risk:['Its own chips may alienate licensees','RISC-V open alternative','SoftBank control overhang']},
+
+/* —— L1 Fabrication & Memory —— */
+{id:'tsmc',name:'TSMC',ticker:'TSM',layer:1,kind:'public',hq:'Taiwan',cap:1840,
+ rev:{l:'Q1 2026 revenue',v:'$35.9B',g:'+41%'},gn:41,
+ role:'~70% of global foundry · ~90% of leading edge',
+ desc:'Manufactures everyone else\'s chips — NVIDIA, Apple, AMD, Broadcom — with yields and scale no rival matches, at an astonishing 50.5% net margin. Its CoWoS advanced packaging was THE AI bottleneck of 2023–25. $165B committed to Arizona, but the leading edge stays in Taiwan by policy.',
+ str:['Process leadership (N2 ramping 2026)','Both AI chip rivals route through it','Packaging (CoWoS) capacity doubling again'],
+ risk:['Taiwan-strait concentration — the system\'s single point of failure','US tariff politics','Single-customer weight (NVIDIA)']},
+{id:'samsung',name:'Samsung Electronics',ticker:'005930.KS',layer:1,kind:'public',hq:'South Korea',cap:1400,
+ rev:{l:'Q1 2026 op. profit',v:'₩57.2T',g:'~8× YoY'},gn:700,
+ role:'Memory giant + foundry #2 + devices',
+ desc:'The conglomerate fighting on every front: memory profits up nearly 8× YoY in the supercycle, HBM4 finally qualified at NVIDIA, a $16.5B Tesla AI6 foundry deal for its Texas fab, and 2nm yields climbing. Market cap roughly ~$1.4T.',
+ str:['Only firm spanning memory + foundry + devices','HBM4 shipping for Vera Rubin','Tesla deal validates 2nm foundry'],
+ risk:['Foundry still far behind TSMC','HBM share lost to SK Hynix','Memory cycle reversal']},
+{id:'skhynix',name:'SK Hynix',ticker:'000660.KS',layer:1,kind:'public',hq:'South Korea',cap:1080,
+ rev:{l:'Q1 2026 revenue',v:'₩52.6T',g:'+198%'},gn:198,
+ role:'HBM leader (~⅔ of NVIDIA\'s HBM4)',
+ desc:'The high-bandwidth-memory champion: first to HBM4 volume for NVIDIA\'s Rubin, 2026 supply sold out, and a Q1 operating margin of 72% — numbers more like a software firm than a memory maker. Crossed $1 trillion in market value in May 2026.',
+ str:['HBM leadership where it matters most','Sold out through 2026','72% operating margin at peak cycle'],
+ risk:['Memory cycles always end','Samsung/Micron HBM4 catch-up','Customer concentration (NVIDIA)']},
+{id:'micron',name:'Micron',ticker:'MU',layer:1,kind:'public',hq:'USA',cap:1120,
+ rev:{l:'FQ2 2026 revenue',v:'$23.9B',g:'+196%'},gn:196,
+ role:'Only US memory maker · HBM #3 rising',
+ desc:'America\'s memory company, transformed by the supercycle: revenue nearly tripled YoY and next-quarter gross margin guided to ~81% — unprecedented in memory history. Its HBM is designed into NVIDIA and AMD platforms; calendar-2026 supply is sold out.',
+ str:['Trillion-dollar club entrant 2026','HBM sold out, prices locked','Geopolitically favored (US-based)'],
+ risk:['The most cyclical business in tech','New supply lands 2027–28','HBM share still behind Korea']},
+{id:'smic',name:'SMIC',ticker:'0981.HK',layer:1,kind:'public',hq:'China',cap:null,
+ rev:{l:'Node status',v:'7nm volume',g:'5nm pilot'},gn:null,
+ role:'China\'s national champion foundry',
+ desc:'Blocked from EUV machines entirely, SMIC pushes 7nm (and pilot 5nm) using older DUV tools with multi-patterning — costly, low-yield, but strategically vital. It fabricates Huawei\'s Ascend AI chips, the backbone of China\'s domestic AI stack.',
+ str:['State backing without limit','7/5nm capacity targeted to grow ~5× by 2027','Captive demand after China barred foreign chips in state DCs'],
+ risk:['No EUV = hard physical ceiling','Yields reportedly 20–40% at 7nm','HBM supply is China\'s binding constraint']},
+
+/* —— L2 Chips & Accelerators —— */
+{id:'nvda',name:'NVIDIA',ticker:'NVDA',layer:2,kind:'public',hq:'USA',cap:4960,
+ rev:{l:'Q1 FY27 revenue (Apr 2026)',v:'$81.6B',g:'+85%'},gn:85,
+ role:'The AI compute monopoly-in-practice',
+ desc:'Designs the GPUs, networking and CUDA software that train and run most of the world\'s AI — ~75–90% of accelerator revenue. Data center alone did $75.2B last quarter at ~75% gross margin; the Vera Rubin platform ships H2 2026. China data-center revenue: ~zero, by two governments\' choice.',
+ str:['CUDA software moat, 20 years deep','Annual platform cadence (Blackwell→Rubin)','Networking arm alone = Fortune-100 scale'],
+ risk:['Customers becoming competitors (TPU, Trainium, custom XPUs)','China = $0 with politics in charge','Priced for flawless execution — see June 5 selloff']},
+{id:'avgo',name:'Broadcom',ticker:'AVGO',layer:2,kind:'public',hq:'USA',cap:1830,
+ rev:{l:'Q2 FY26 AI revenue',v:'$10.8B',g:'+143%'},gn:143,
+ role:'Custom AI chips (XPUs) + networking for everyone',
+ desc:'The arms dealer of the anti-NVIDIA resistance: co-designs Google\'s TPUs, Meta\'s MTIA and OpenAI\'s 10GW custom-chip program, and sells the Ethernet switches connecting all of it. FY26 AI revenue guided ~$56B; management points to >$100B in FY27.',
+ str:['Every credible custom-silicon program routes through it','Networking wins regardless of whose accelerator wins','VMware software cash flows'],
+ risk:['Extreme customer concentration','Its soft Q3 guide erased >$1T from chip stocks on June 5','OpenAI\'s finances underpin big orders']},
+{id:'amd',name:'AMD',ticker:'AMD',layer:2,kind:'public',hq:'USA',cap:796,
+ rev:{l:'Q1 2026 revenue',v:'$10.3B',g:'+38%'},gn:38,
+ role:'The merchant challenger to NVIDIA',
+ desc:'The only company with a full alternative stack — Instinct GPUs, EPYC CPUs, ROCm software. OpenAI signed for 6 gigawatts of its accelerators, taking warrants for ~10% of the company; Oracle ordered 50,000 MI450s. The rack-scale Helios platform launches H2 2026.',
+ str:['Validated by OpenAI & Oracle anchor deals','Proven execution under Lisa Su','Only real merchant #2'],
+ risk:['CUDA gravity and NVIDIA\'s annual cadence','Warrant structure dilutes if it works','Same scarce TSMC/HBM supply as everyone']},
+{id:'intc',name:'Intel',ticker:'INTC',layer:2,kind:'public',hq:'USA',cap:588,
+ rev:{l:'Q1 2026 revenue',v:'$13.6B',g:'+7%'},gn:7,
+ role:'US-soil foundry hope · +~550% in a year',
+ desc:'The fallen giant turned national project: Washington converted CHIPS grants into a ~10% stake, NVIDIA invested $5B, and the 18A node genuinely shipped (Panther Lake, Jan 2026). The strategic hedge against Taiwan concentration — still GAAP-unprofitable.',
+ str:['Only plausible US-flag leading-edge foundry','18A real and yielding better','Government + NVIDIA + SoftBank backing'],
+ risk:['Foundry economics still brutal','Far behind in AI accelerators (Crescent Island: 2027)','Stock priced for a turnaround still in progress']},
+{id:'qcom',name:'Qualcomm',ticker:'QCOM',layer:2,kind:'public',hq:'USA',cap:214,
+ rev:{l:'Data-center entry',v:'AI200 racks',g:'2026 deploys'},gn:null,
+ role:'Mobile-chip king entering AI inference',
+ desc:'Powers nearly every premium Android phone; entered the data-center race with AI200/AI250 inference racks (first deployments 2026, anchored by Saudi Arabia\'s Humain). A real option on "inference everywhere" — tiny share today.',
+ str:['On-device AI leadership in phones','Inference-focused differentiation (memory-heavy racks)','Sovereign-AI anchor customer'],
+ risk:['Late entrant vs giants','Apple modem in-housing','Execution risk in a new market']},
+{id:'mrvl',name:'Marvell',ticker:'MRVL',layer:2,kind:'public',hq:'USA',cap:246,
+ rev:{l:'Q1 FY27 revenue',v:'$2.4B',g:'+28%'},gn:28,
+ role:'Custom silicon #2 + optical interconnects',
+ desc:'The quieter custom-chip house — Amazon\'s Trainium line is its anchor — plus the electro-optics that link AI data centers. Reported "exceptional AI-related bookings" and raised multi-year outlooks in May 2026.',
+ str:['AWS Trainium relationship','Optics for every 800G/1.6T buildout','#2 in a market that wants a #2'],
+ risk:['Concentrated hyperscaler customers','Broadcom looms over everything','Design-win lumpiness']},
+
+/* —— L3 Cloud & Data Centers —— */
+{id:'msft',name:'Microsoft',ticker:'MSFT',layer:3,kind:'public',hq:'USA',cap:2900,
+ rev:{l:'FY26 Q3 revenue',v:'$82.9B',g:'+18%'},gn:18,
+ role:'Azure + Copilot + 27% of OpenAI',
+ desc:'The enterprise toll road: Azure grew 40%, the AI business passed a $37B run-rate (+123%), commercial backlog hit $627B, and calendar-2026 capex is ~$190B. Owns ~27% of OpenAI, sells Copilot into 450M Office seats, and now builds its own MAI frontier models and Maia chips.',
+ str:['Distribution into every enterprise','OpenAI stake + Anthropic partnership — wins either way','$627B contracted backlog'],
+ risk:['$190B/yr must convert to earnings','Slipped to 3rd-largest as investors question capex','OpenAI independence cuts both ways']},
+{id:'amzn',name:'Amazon',ticker:'AMZN',layer:3,kind:'public',hq:'USA',cap:2600,
+ rev:{l:'Q1 2026 AWS revenue',v:'$37.6B',g:'+28%'},gn:28,
+ role:'AWS — the biggest cloud + cheapest silicon',
+ desc:'The neutral utility: AWS reaccelerated to +28% (fastest in 15 quarters), backlog $364B before a >$100B Anthropic commitment, ~$200B of 2026 capex — the largest anywhere — and an in-house chip business (Trainium/Graviton) already >$20B a year.',
+ str:['Most workloads, most pragmatic strategy','Custom silicon proven at volume','Anthropic alliance (up to ~$33B invested)'],
+ risk:['Free cash flow collapsed ~95% under capex','No frontier lab of its own','Retail margins fund the bet']},
+{id:'googl',name:'Alphabet',ticker:'GOOGL',layer:3,kind:'public',hq:'USA',cap:4370,
+ rev:{l:'Q1 2026 revenue',v:'$109.9B',g:'+22%'},gn:22,
+ role:'The only full-stack player (TPUs→Gemini→apps)',
+ desc:'Chips (TPU v7), cloud (+63% to $20B/qtr, $462B backlog), models (Gemini 3.5), and distribution (Search, Android, YouTube) — vertical integration nobody else has. Crossed $4T in January 2026 when Apple chose Gemini for Siri; now the second-largest company on Earth.',
+ str:['Owns every layer of its own stack','TPUs now sold externally — attacking NVIDIA\'s margin','Search proved resilient; AI Mode has 1B users'],
+ risk:['Antitrust remedies under appeal','AI answers still pressure search economics','Capex $180–190B and rising']},
+{id:'orcl',name:'Oracle',ticker:'ORCL',layer:3,kind:'public',hq:'USA',cap:530,
+ rev:{l:'Q4 FY26 revenue (rpt. Jun 10)',v:'$19.2B',g:'+21%'},gn:21,
+ role:'The leveraged AI-cloud bet (Stargate landlord)',
+ desc:'Borrowed tens of billions to build GPU data centers largely for one customer — OpenAI (~$300B contract). Backlog: a staggering $638B (+363%); OCI grew 93%. The price: negative free cash flow, ~$125B of debt, a Moody\'s negative outlook, and a stock −47% from its September peak.',
+ str:['$638B contracted backlog','OCI growing 93%','First-mover in AI-era contract scale'],
+ risk:['Single-customer concentration (a money-losing one)','Raising another ~$40B; CDS widening','The market\'s chosen proxy for AI-credit fear']},
+{id:'crwv',name:'CoreWeave',ticker:'CRWV',layer:3,kind:'public',hq:'USA',cap:52,
+ rev:{l:'Q1 2026 revenue',v:'$2.1B',g:'+112%'},gn:112,
+ role:'The flagship "neocloud" (GPUs only)',
+ desc:'A cloud that rents only GPUs: $99.4B contract backlog (OpenAI ~$22B, Meta ~$35B), >3.5GW contracted, financed with GPU-collateralized debt — including 2026\'s first investment-grade GPU-backed facility. High beta on the whole AI trade.',
+ str:['$99B backlog vs $52B market cap','Speed: deploys faster than hyperscalers','Anthropic, Meta, OpenAI, Google all customers'],
+ risk:['Debt-heavy model; GPU collateral ages fast','Customer concentration','First to starve if the cycle turns']},
+
+/* —— L4 Models & Intelligence —— */
+{id:'openai',name:'OpenAI',ticker:'Private',layer:4,kind:'private',hq:'USA',cap:852,capLabel:'$852B (Mar 2026 round)',
+ rev:{l:'Annualized revenue (early 2026)',v:'>$25B',g:'losses by design'},gn:null,
+ role:'ChatGPT — the consumer giant of AI',
+ desc:'~900M people use ChatGPT weekly; 1M+ business customers. Raised $122B at an $852B valuation (Mar 2026), filed confidentially for a possible $1T+ IPO, and reframed its compute plans to ~$600B through 2030. Microsoft owns ~27%; the nonprofit Foundation 26%. GPT-5.5 is the current flagship.',
+ str:['Strongest consumer brand in AI','Compute secured across 5+ partners','Enterprise now >40% of revenue'],
+ risk:['Multi-billion annual losses into 2028+','$1.4T of announced commitments vs revenue','Every big partner is also a rival']},
+{id:'anthropic',name:'Anthropic',ticker:'Private',layer:4,kind:'private',hq:'USA',cap:965,capLabel:'$965B (May 2026 Series H)',
+ rev:{l:'Run-rate revenue',v:'$30B+ (Apr 2026)',g:'~$47B claimed May'},gn:null,
+ role:'Claude — the enterprise & safety lab',
+ desc:'Founded 2021 around safety-focused frontier AI; ~80% enterprise revenue, Claude Code alone ~$2.5B run-rate. Its $65B Series H (May 28, 2026) at $965B made it the most valuable AI startup, surpassing OpenAI; the Claude 5 family (June 9, 2026) tops public leaderboards. Buys compute from AWS, Google AND Microsoft.',
+ str:['#1 on leaderboards at press time (Claude Fable 5)','Enterprise + coding leadership','Multi-cloud: captive to no one'],
+ risk:['Growth figures company-stated pending IPO filing','Compute commitments are enormous','Frontier competition never sleeps']},
+{id:'deepmind',name:'Google DeepMind',ticker:'(Alphabet)',layer:4,kind:'sub',hq:'UK/USA',cap:null,
+ rev:{l:'Flagship',v:'Gemini 3.5',g:'I/O 2026'},gn:null,
+ role:'Alphabet\'s research lab — deepest bench in AI',
+ desc:'Gemini 3 (Nov 2025) reset the leaderboards and the narrative — "Google won 2025." Gemini 3.5 followed at I/O 2026; the Gemini app approaches a billion monthly users, and its science models (AlphaFold lineage) remain unmatched. Powers Apple\'s new Siri under a ~$1B/year deal.',
+ str:['Research pedigree without equal','Native TPU compute — no NVIDIA tax','Distribution via Search, Android, now Siri'],
+ risk:['Must monetize without breaking Search','Talent raids from rivals','Big-company shipping speed']},
+{id:'metaai',name:'Meta Superintelligence Labs',ticker:'(Meta)',layer:4,kind:'sub',hq:'USA',cap:null,
+ rev:{l:'Flagship',v:'Muse Spark',g:'closed (Apr 2026)'},gn:null,
+ role:'Meta\'s lab — the open-source era\'s end',
+ desc:'After Llama 4 disappointed, Zuckerberg paid $14.3B for Scale AI\'s Alexandr Wang, assembled nine-figure-pay teams — and shipped Muse Spark (April 2026) as a closed model, ending Meta\'s open-weights era at the frontier. Turbulent, lavishly funded, strategically pivotal.',
+ str:['Compute and money without limit','3.5B daily users to deploy into','Top-5 model on composite indices (reported)'],
+ risk:['Org turbulence is public','Open-source goodwill spent','Must justify $125–145B capex']},
+{id:'xai',name:'xAI (SpaceX)',ticker:'Private',layer:4,kind:'private',hq:'USA',cap:250,capLabel:'$250B (Feb 2026 merger value)',
+ rev:{l:'Colossus 2 cluster',v:'>1 GW',g:'first ever'},gn:null,
+ role:'Musk\'s lab — now a SpaceX subsidiary',
+ desc:'Built the >1GW Colossus supercluster in Memphis at record speed, merged into SpaceX (Feb 2026, $250B value inside a $1.25T entity) ahead of a mega-IPO. Grok models are capable; the brand carries deepfake-scandal litigation. Tesla invested $2B; even Anthropic rents its compute.',
+ str:['Fastest infrastructure builder alive','SpaceX capital + Tesla + X distribution','Gigawatt-class compute in-house'],
+ risk:['Grok 5 repeatedly delayed','Legal/reputational overhang','Key-man risk, concentrated']},
+{id:'mistral',name:'Mistral AI',ticker:'Private',layer:4,kind:'private',hq:'France',cap:14,capLabel:'~€12B (Sep 2025) + 2026 raises',
+ rev:{l:'ARR (2025)',v:'>$400M',g:'→$1B+ target'},gn:null,
+ role:'Europe\'s champion — open weights, sovereignty',
+ desc:'France\'s frontier lab: open-weight Mistral 3 family, ASML as anchor shareholder (~11%), and "European sovereignty" as the pitch — building 200MW of EU compute. Small beside the US giants, structurally important to a continent.',
+ str:['ASML backing; EU procurement tailwind','Open weights win developer goodwill','Efficient models, lean team'],
+ risk:['1/50th the compute of US labs','Talent gravity pulls west','Niche unless Europe mandates it']},
+{id:'deepseek',name:'DeepSeek',ticker:'Private',layer:4,kind:'private',hq:'China',cap:null,capLabel:'undisclosed',
+ rev:{l:'Flagship',v:'V4 (1.6T params)',g:'MIT license'},gn:null,
+ role:'China\'s open-weights shockmaker',
+ desc:'Its R1 release (Jan 2025) wiped ~$600B off NVIDIA in a day by proving cheap frontier-class training. V4 (Apr 2026) is open-weights at ~5–30× lower API prices than US peers. Trains on NVIDIA, infers on Huawei Ascend — the embodiment of China\'s constrained-but-clever stack.',
+ str:['Price-performance disruption','Open weights = global adoption','State support'],
+ risk:['Chip access is the ceiling (R2 delays)','Trust barriers in Western enterprise','Monetization unclear']},
+
+/* —— L5 Applications & Devices —— */
+{id:'aapl',name:'Apple',ticker:'AAPL',layer:5,kind:'public',hq:'USA',cap:4340,
+ rev:{l:'FQ2 2026 revenue',v:'$111.2B',g:'+17%'},gn:17,
+ role:'The patient distributor — AI at the edge',
+ desc:'Skipped the frontier-model race, rented Google\'s Gemini (~$1B/yr) for the rebuilt Siri running on its own private servers — and won the cycle anyway: record iPhone 17 quarter, stock near highs, ~$14B capex vs rivals\' $200B. Tim Cook hands the CEO role to John Ternus Sept 1, 2026.',
+ str:['2B+ devices = the edge-AI distribution monopoly','Own silicon (M5, A-series) via TSMC','Capex-light strategy aging gracefully'],
+ risk:['Assistant brain rented from a direct rival','Agents could weaken the App Store toll booth','China & tariff exposure']},
+{id:'meta',name:'Meta Platforms',ticker:'META',layer:5,kind:'public',hq:'USA',cap:1440,
+ rev:{l:'Q1 2026 revenue',v:'$56.3B',g:'+33%'},gn:33,
+ role:'AI\'s biggest internal customer (ads + 3.5B users)',
+ desc:'AI recommendations power a $56B/quarter ad machine (+33%); Meta AI rides inside WhatsApp/Instagram/Facebook. Spending $125–145B in 2026 on gigawatt data centers (Hyperion ~5GW) financed with a $27B private-credit SPV and $30B of bonds — plus 8,000 layoffs in May\'s AI restructuring.',
+ str:['Proven AI→ad-revenue loop','A third of humanity, daily','Ray-Ban AI glasses: usage tripling'],
+ risk:['Hyperscaler spending without a cloud business','Superintelligence org turbulence','Stock −11% YTD on the doubt']},
+{id:'tsla',name:'Tesla',ticker:'TSLA',layer:5,kind:'public',hq:'USA',cap:1500,
+ rev:{l:'Q1 2026 revenue',v:'$22.4B',g:'+16%'},gn:16,
+ role:'Physical AI: robotaxis, Optimus, own chips',
+ desc:'The wager that intelligence-in-motion is AI\'s biggest application: unsupervised robotaxis in Austin, Dallas and Houston (small fleet so far), the Optimus humanoid line being prepped at Fremont, AI5 chips taped out (TSMC + Samsung), and a $2B investment in xAI.',
+ str:['Real-world driving data moat','Vertical: cars + chips + energy','Robotaxi expansion accelerating'],
+ risk:['Waymo is far ahead today (577 vehicles in TX alone)','Robotaxi revenue "minimal until 2027" — Musk','Valuation rests on promises']},
+{id:'pltr',name:'Palantir',ticker:'PLTR',layer:5,kind:'public',hq:'USA',cap:314,
+ rev:{l:'Q1 2026 revenue',v:'$1.63B',g:'+85%'},gn:85,
+ role:'The purest application-layer AI bet',
+ desc:'Operational AI for governments (Army, NATO) and enterprises (AIP). Q1 2026: revenue +85%, US commercial +133%, a Rule-of-40 score of 145 — and the stock fell anyway, because ~100× forward sales prices in perfection. The test case for application-layer value capture.',
+ str:['Growth + margins no software peer matches','Deep government moats','AIP = real deployed agents, not demos'],
+ risk:['Richest valuation in the index','Politically entangled revenue','Every point of growth is already priced']},
+{id:'crm',name:'Salesforce',ticker:'CRM',layer:5,kind:'public',hq:'USA',cap:136,
+ rev:{l:'FQ1 27 revenue',v:'$11.1B',g:'+13%'},gn:13,
+ role:'Agentforce vs the "AI kills SaaS" fear',
+ desc:'The CRM king grew Agentforce to $1.2B ARR (+205%) and posted record margins — yet its market value roughly halved in a year as investors gamed out agents replacing seat-priced software. Now trades at ~12× earnings: disruption priced as destiny.',
+ str:['Agentforce scaling fast ($1.2B ARR)','Distribution + data in every sales org','Valuation already assumes the worst'],
+ risk:['Agents may commoditize the interface','Seat-based pricing under siege','Growth at 13% vs AI-native rivals']},
+{id:'now',name:'ServiceNow',ticker:'NOW',layer:5,kind:'public',hq:'USA',cap:106,
+ rev:{l:'Q1 2026 subscriptions',v:'$3.7B',g:'+22%'},gn:22,
+ role:'Enterprise workflows + AI (the other test case)',
+ desc:'Raised its 2026 AI revenue target to $1.5B with +22% subscription growth and >$1M AI deals up 130% — and was de-rated anyway in Q1\'s ~$2T SaaS selloff. Whether AI strengthens or strands workflow incumbents is the application layer\'s biggest open question.',
+ str:['AI products attached to existing workflows','+130% growth in $1M+ AI customers','Sticky enterprise base'],
+ risk:['Agent-native challengers','Multiple compression sector-wide','Seat exposure like all SaaS']}
+];
+
+/* ——— Edge types ——— */
+const ETYPES = {
+  supply:{c:0x7c97b5,name:'Equipment supply'},
+  ip:    {c:0x8f9bc0,name:'Design IP / software'},
+  fab:   {c:0x7da794,name:'Manufactures for'},
+  memory:{c:0xbd8d68,name:'HBM memory supply'},
+  compute:{c:0x9a8cb5,name:'Chips / systems'},
+  cloud: {c:0xb48794,name:'Cloud & compute contracts'},
+  invest:{c:0xc0a468,name:'Investment / stake'},
+  model: {c:0x8aa179,name:'Models power products'},
+  owns:  {c:0x8a8f9c,name:'Owns'}
+};
+
+/* [from, to, type, label]  — particles flow from → to */
+const EDGES = [
+ /* equipment → fabs */
+ ['asml','tsmc','supply','EUV lithography'], ['asml','samsung','supply','EUV'], ['asml','intc','supply','first High-NA EUV'],
+ ['asml','micron','supply','EUV for DRAM'], ['asml','skhynix','supply','EUV for DRAM'], ['asml','smic','supply','DUV only — EUV banned'],
+ ['amat','tsmc','supply','deposition · etch'], ['lrcx','samsung','supply','etch · deposition'], ['lrcx','skhynix','supply','memory etch'],
+ ['klac','tsmc','supply','inspection'], ['klac','intc','supply','metrology'],
+ /* design IP / EDA */
+ ['snps','nvda','ip','EDA design software'], ['cdns','amd','ip','EDA design software'], ['cdns','avgo','ip','EDA'],
+ ['arm','qcom','ip','CPU architecture'], ['arm','nvda','ip','Grace CPU IP'], ['arm','amzn','ip','Graviton IP'], ['arm','aapl','ip','architecture license'],
+ /* fabs → chip designers / devices */
+ ['tsmc','nvda','fab','prints Blackwell & Rubin'], ['tsmc','amd','fab','prints Instinct'], ['tsmc','avgo','fab','prints XPUs'],
+ ['tsmc','qcom','fab','prints Snapdragon'], ['tsmc','mrvl','fab','prints custom silicon'], ['tsmc','aapl','fab','prints A- & M-series'],
+ ['samsung','tsla','fab','AI6 chips · $16.5B'],
+ /* memory → accelerators */
+ ['skhynix','nvda','memory','HBM4 (~⅔ of orders)'], ['micron','nvda','memory','HBM4'], ['samsung','nvda','memory','HBM4'], ['micron','amd','memory','HBM'],
+ /* chips → clouds & big buyers */
+ ['nvda','msft','compute','GB300 / VR200 fleets'], ['nvda','amzn','compute','GPU fleets'], ['nvda','googl','compute','GPU fleets'],
+ ['nvda','orcl','compute','450K GB200s at Abilene'], ['nvda','crwv','compute','GPU fleets'], ['nvda','meta','compute','GPU fleets'],
+ ['nvda','tsla','compute','training clusters'], ['nvda','xai','compute','Colossus GPUs'],
+ ['amd','orcl','compute','50K MI450s'], ['amd','openai','compute','6 GW Instinct + warrant'],
+ ['avgo','googl','compute','TPU co-design'], ['avgo','meta','compute','MTIA co-design'], ['avgo','openai','compute','10 GW custom XPUs'],
+ ['avgo','anthropic','compute','TPU-based capacity (5 GW)'], ['mrvl','amzn','compute','Trainium co-design'],
+ /* clouds → labs */
+ ['msft','openai','cloud','$250B Azure commit · 27% stake'], ['orcl','openai','cloud','~$300B Stargate contract'],
+ ['crwv','openai','cloud','~$22B contracts'], ['crwv','meta','cloud','~$35B contracts'],
+ ['amzn','anthropic','cloud','>$100B AWS · Project Rainier'], ['googl','anthropic','cloud','1 GW+ of TPUs'], ['msft','anthropic','cloud','$30B Azure commit'],
+ /* investments */
+ ['nvda','openai','invest','up to $100B LOI — "on ice"'], ['nvda','anthropic','invest','$10B'], ['nvda','intc','invest','$5B stake'],
+ ['tsla','xai','invest','$2B'],
+ /* ownership */
+ ['googl','deepmind','owns','Alphabet lab'], ['meta','metaai','owns','Meta lab'],
+ /* models → applications */
+ ['deepmind','aapl','model','Gemini powers new Siri (~$1B/yr)'], ['openai','msft','model','models inside Copilot'],
+ ['anthropic','pltr','model','Claude in gov & defense stacks'], ['smic','deepseek','compute','domestic chips (via Huawei Ascend)']
+];
+
+/* ——— Timeline ——— */
+const MILESTONES = [
+ {y:'1950',e:'Foundations',t:'Turing\'s question',d:'Alan Turing proposes the imitation game: can a machine converse indistinguishably from a human?'},
+ {y:'1956',e:'Foundations',t:'"Artificial intelligence" is born',d:'The Dartmouth workshop names the field. Optimism — and funding — surge.'},
+ {y:'1958',e:'Foundations',t:'The Perceptron',d:'Rosenblatt\'s first trainable neural network. The press promises thinking machines "within a generation."'},
+ {y:'1974',e:'Foundations',t:'AI winter I',d:'Promises outrun the hardware. Funding collapses — a pattern that will repeat.'},
+ {y:'1986',e:'Foundations',t:'Backpropagation',d:'The training algorithm for multi-layer networks goes mainstream. The seeds of deep learning.'},
+ {y:'1997',e:'Foundations',t:'Deep Blue beats Kasparov',d:'IBM wins at chess — impressive, narrow, and a dead end for general intelligence.'},
+ {y:'2006',e:'Deep learning',t:'CUDA: GPUs open up',d:'NVIDIA lets scientists program gaming chips for general math. The accidental foundation of an empire.'},
+ {y:'2012',e:'Deep learning',t:'AlexNet',d:'A GPU-trained neural net crushes the ImageNet contest. Neural networks + data + GPUs becomes the recipe for everything after.'},
+ {y:'2016',e:'Deep learning',t:'AlphaGo',d:'DeepMind defeats Go champion Lee Sedol — a feat expected to be a decade away.'},
+ {y:'2017',e:'Transformers',t:'"Attention Is All You Need"',d:'Google researchers publish the transformer — the architecture inside every modern chatbot.'},
+ {y:'2020',e:'Transformers',t:'GPT-3 & scaling laws',d:'Bigger is reliably smarter. AI progress becomes a capital-allocation problem.'},
+ {y:'2022',e:'GenAI era',t:'ChatGPT',d:'Nov 30: 100M users in two months. AI becomes an industry, not a research topic.'},
+ {y:'2023',e:'GenAI era',t:'GPT-4 · NVIDIA passes $1T',d:'Frontier models reach professional usefulness; the chip gold rush begins in earnest.'},
+ {y:'2024',e:'GenAI era',t:'Reasoning models',d:'OpenAI\'s o1 thinks step-by-step before answering — capability scales with thinking time now, too. NVIDIA passes $3T.'},
+ {y:'Jan 2025',e:'Supercycle',t:'DeepSeek shock · Stargate',d:'A Chinese lab trains frontier-class AI on a budget — NVIDIA sheds ~$600B in a day, then recovers. The $500B Stargate project launches the buildout era.'},
+ {y:'Aug 2025',e:'Supercycle',t:'GPT-5',d:'OpenAI\'s flagship lands. Weekly ChatGPT users pass 800M; the H20 export saga makes chips front-page geopolitics.'},
+ {y:'Oct 2025',e:'Supercycle',t:'NVIDIA $5T · OpenAI restructures',d:'First $5-trillion company. OpenAI becomes a PBC: Microsoft 27%, a $250B Azure commitment, IPO path open. The circular-deal era peaks.'},
+ {y:'Nov 2025',e:'Supercycle',t:'Gemini 3 · the alliance shuffle',d:'"Google won 2025." Microsoft + NVIDIA invest in Anthropic ($15B) as it commits $30B to Azure. Burry shorts the complex.'},
+ {y:'Jan 2026',e:'Supercycle',t:'Alphabet $4T · Gemini-Siri',d:'Apple rents Google\'s model for Siri (~$1B/yr). Memory prices double; the supercycle lifts Micron and SK Hynix toward $1T.'},
+ {y:'Feb 2026',e:'Supercycle',t:'SpaceX absorbs xAI',d:'A $1.25T combined entity, history\'s biggest merger — and Anthropic\'s Series G lands at $380B.'},
+ {y:'Mar 2026',e:'Supercycle',t:'OpenAI $852B · Nasdaq corrects',d:'A $122B round, then a confidential IPO filing. The Nasdaq enters its first AI-era correction (~12%); discipline returns.'},
+ {y:'Apr 2026',e:'Supercycle',t:'Meta goes closed',d:'Muse Spark ends Meta\'s open-weights era; the open torch passes to China (Qwen, DeepSeek V4) and Mistral. Amazon adds up to $25B to its Anthropic stake.'},
+ {y:'May 2026',e:'Supercycle',t:'Anthropic $965B',d:'A $65B Series H makes it the most valuable AI startup; hyperscaler capex guides reach ~$700B for 2026. EU delays its high-risk AI rules to Dec 2027.'},
+ {y:'Jun 2026',e:'Supercycle',t:'Claude 5 · Rubin · a $1T tremor',d:'Claude Fable 5 tops the leaderboards (Jun 9); NVIDIA\'s Vera Rubin hits full production; and on Jun 5 one soft Broadcom guide erases >$1T of chip value in a day. You are here.'}
+];
+
+/* ——— Guided tours ——— */
+const TOURS = [
+ {id:'sand',title:'From Sand to ChatGPT',time:'~3 min · 9 stops',
+  blurb:'Follow one AI chip across four continents and six monopolies — from a Dutch lithography machine to the answer on your screen.',
+  steps:[
+   {focus:'overview',title:'One machine, six layers',text:'Everything below your chat window is a single supply chain: equipment makers at the base, then fabs and memory, chip designers, clouds, model labs, and finally the apps you touch. Let\'s ride it bottom to top.'},
+   {focus:'asml',title:'Stop 1 · Veldhoven, Netherlands',text:'Every advanced chip begins as light: ASML\'s EUV machines — the only ones on Earth — print features a few atoms wide. ~$200–400M each, banned for export to China, and booked out for years.'},
+   {focus:'tsmc',title:'Stop 2 · Hsinchu, Taiwan',text:'TSMC turns those machines into chips for everyone else — ~70% of the foundry market, ~90% of the leading edge, 50.5% net margin. Months of processing, thousands of steps, one island.'},
+   {focus:'skhynix',title:'Stop 3 · Icheon, South Korea',text:'AI chips starve without data. SK Hynix stacks memory into HBM4 towers bonded beside the GPU — it supplies ~two-thirds of NVIDIA\'s needs, is sold out through 2026, and just crossed $1T in value.'},
+   {focus:'nvda',title:'Stop 4 · Santa Clara, California',text:'NVIDIA designs the GPU, the networking, and the CUDA software that makes 100,000 chips act as one computer. $81.6B revenue last quarter, ~75% gross margin — the largest profit pool in technology.'},
+   {focus:'msft',title:'Stop 5 · A data center in Wisconsin',text:'Racks land in hyperscaler "AI factories" drawing city-scale power. Microsoft alone spends ~$190B this year; its Fairwater sites link into one distributed supercomputer.'},
+   {focus:'openai',title:'Stop 6 · The model',text:'OpenAI trains GPT-5.5 on those fleets and serves ~900 million weekly users. Training builds the factory; inference — every reply — runs the production line, billions of times a day.'},
+   {focus:'aapl',title:'Stop 7 · Your pocket',text:'Intelligence reaches you through apps and devices — ChatGPT, Copilot, and a Siri rebuilt on Google\'s Gemini running on Apple\'s private cloud. Sand in, sentences out.'},
+   {focus:'overview',title:'The whole machine',text:'Nine months, four continents, the most complex manufactured objects in history — repeated millions of times a year. Click any node to inspect it; the handbook\'s Chapter 5 tells this story in full.'}]},
+ {id:'money',title:'Follow the Money',time:'~3 min · 8 stops',
+  blurb:'~$700 billion flows down this map every year. Trace it from your subscription to the bottom of the stack — and meet the gap everyone argues about.',
+  steps:[
+   {focus:'overview',title:'The waterfall',text:'Money enters at the top — subscriptions, API fees, ad dollars — and cascades down: labs pay clouds, clouds pay chipmakers, chipmakers pay fabs, fabs pay equipment makers. Watch where it pools.'},
+   {focus:'openai',title:'The labs collect… and burn',text:'OpenAI: >$25B annualized revenue, ~900M weekly users — and billions in planned losses. Anthropic: $30B+ run-rate, ~80% from enterprises. Growth is violent; profits are deferred by design.'},
+   {focus:'orcl',title:'The clouds borrow to build',text:'Oracle borrowed ~$125B+ and counting to build for one big customer; backlog $638B. Meta sold $30B of bonds and a $27B private-credit SPV. The buildout is increasingly financed, not just expensed.'},
+   {focus:'nvda',title:'The toll booth',text:'Roughly every second dollar of AI capex passes through NVIDIA at ~75% gross margin. It then invests in its own customers — $10B in Anthropic, a famous $100B OpenAI pledge now "on ice." Circular? Partly. Disciplined? Increasingly.'},
+   {focus:'tsmc',title:'The printer',text:'NVIDIA keeps the margin; TSMC keeps the monopoly. $35.9B last quarter, +41%, at a 50.5% net margin — and a $52–56B capex bill of its own, flowing straight down to the equipment layer.'},
+   {focus:'micron',title:'The memory windfall',text:'Scarcity pools profit: HBM crowded out ordinary memory, DRAM prices doubled in a quarter, and Micron guided to ~81% gross margin. Your next laptop costs more because of ChatGPT.'},
+   {focus:'asml',title:'The bottom of the waterfall',text:'Last stop: one Dutch company\'s order book. When ASML raises guidance — as it did in April 2026 — it means the whole stack above still believes.'},
+   {focus:'overview',title:'The $700B question',text:'Total AI revenue (~$60–70B/yr) is about one-tenth of infrastructure spend (~$700B/yr). Either revenue grows into the buildout — the scaling bet — or the buildout overshot. That gap IS the bubble debate. Chapter 6 takes both sides seriously.'}]},
+ {id:'choke',title:'Choke Points & Geopolitics',time:'~2.5 min · 7 stops',
+  blurb:'Five places where the entire AI economy narrows to a single point of failure — and the superpower contest being fought over each one.',
+  steps:[
+   {focus:'asml',title:'One machine',text:'EUV lithography: one supplier, zero substitutes. Washington bans its export to China entirely; Beijing\'s entire counter-strategy is engineering around this single Dutch machine.'},
+   {focus:'tsmc',title:'One island',text:'~90% of leading-edge chips are printed in Taiwan. China ran its largest-ever exercises in Dec 2025–Jan 2026; TSMC builds $165B of US fabs while keeping the crown jewels home. The "silicon shield" is the world economy\'s load-bearing assumption.'},
+   {focus:'skhynix',title:'Three memory makers',text:'All HBM on Earth comes from SK Hynix, Samsung, and Micron. All three are sold out. China\'s CXMT is years behind — which is why HBM, not GPUs, may be China\'s tightest constraint.'},
+   {focus:'nvda',title:'One designer, zero China revenue',text:'The US lets NVIDIA sell modified chips to China; Beijing now blocks them anyway. Result: the world\'s biggest company books ~$0 there. Two governments agree on almost nothing — except keeping NVIDIA out of China.'},
+   {focus:'smic',title:'The counter-stack',text:'SMIC pushes 7nm without EUV at painful yields; Huawei\'s Ascend chips ship by the hundreds of thousands; DeepSeek\'s open models ride on them. The US lead is large (~30× new compute under full restrictions) — but China\'s floor rises every year.'},
+   {focus:'msft',title:'The power wall',text:'The newest choke point isn\'t silicon — it\'s electricity. Data centers head toward 945 TWh by 2030; Big Tech is restarting Three Mile Island and queueing years for gas turbines. You cannot Amazon-Prime a power plant.'},
+   {focus:'overview',title:'Fragile by design',text:'Equipment: one company. Fabs: one island. Memory: three firms. Chips: one designer. Power: one grid at a time. Efficiency built this machine; resilience was nobody\'s job. That tension defines the next decade.'}]}
+];
+
+/* ============================== SCENE ============================== */
+const RM = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const isMobile = window.matchMedia('(max-width: 900px)').matches;
+const $ = s => document.querySelector(s);
+
+const THEMES = {
+  dark:{bg:0x0d0f14, fog:0.0026, starC:0x8a93a8, starOp:.5, platOp:.12, gridOp:.08, edgeOp:.26,
+        emiss:.3, haloOp:.2, haloBlend:THREE.AdditiveBlending, ink:'#e7e4db', sub:'#9b978c'},
+  light:{bg:0xf2efe7, fog:0.0017, starC:0x9aa0b4, starOp:.22, platOp:.12, gridOp:.12, edgeOp:.4,
+        emiss:.2, haloOp:.1, haloBlend:THREE.NormalBlending, ink:'#23262e', sub:'#5a5e68'}
+};
+let theme = THEMES.dark;
+
+const stage = $('#stage');
+const renderer = new THREE.WebGLRenderer({antialias:true, preserveDrawingBuffer:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+stage.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(theme.bg);
+scene.fog = new THREE.FogExp2(theme.bg, theme.fog);
+
+const camera = new THREE.PerspectiveCamera(50, innerWidth/innerHeight, 0.1, 1200);
+const HOME = {pos:new THREE.Vector3(54, 9, 78), tgt:new THREE.Vector3(0, 0, 0)};
+camera.position.copy(RM ? HOME.pos : new THREE.Vector3(130, 70, 170));
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.copy(HOME.tgt);
+controls.enableDamping = true; controls.dampingFactor = .08;
+controls.rotateSpeed = .55; controls.minDistance = 14; controls.maxDistance = 240;
+controls.maxPolarAngle = Math.PI * .64;
+
+scene.add(new THREE.AmbientLight(0xffffff, .7));
+const key = new THREE.DirectionalLight(0xffffff, 1.05); key.position.set(40, 60, 25); scene.add(key);
+const rim = new THREE.DirectionalLight(0x7c8cff, .45); rim.position.set(-50, -10, -40); scene.add(rim);
+
+/* soft round texture for halos & particles */
+function discTexture(stops){
+  const cv = document.createElement('canvas'); cv.width = cv.height = 128;
+  const cx = cv.getContext('2d'); const g = cx.createRadialGradient(64,64,0,64,64,64);
+  stops.forEach(([o,c]) => g.addColorStop(o,c));
+  cx.fillStyle = g; cx.fillRect(0,0,128,128);
+  return new THREE.CanvasTexture(cv);
+}
+const haloTex = discTexture([[0,'rgba(255,255,255,.85)'],[ .35,'rgba(255,255,255,.25)'],[1,'rgba(255,255,255,0)']]);
+const dotTex  = discTexture([[0,'rgba(255,255,255,1)'],[ .5,'rgba(255,255,255,.6)'],[1,'rgba(255,255,255,0)']]);
+
+/* theme-aware text sprites */
+const labelRegistry = [];
+function textSprite(draw, w, h, scale){
+  const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+  const tex = new THREE.CanvasTexture(cv); tex.anisotropy = 4;
+  const mat = new THREE.SpriteMaterial({map:tex, transparent:true, depthWrite:false});
+  const sp = new THREE.Sprite(mat); sp.scale.set(scale, scale*h/w, 1);
+  const repaint = () => { const cx = cv.getContext('2d'); cx.clearRect(0,0,w,h); draw(cx, w, h); tex.needsUpdate = true; };
+  repaint(); labelRegistry.push(repaint);
+  return sp;
+}
+
+/* ---------- stars ---------- */
+const starGeo = new THREE.BufferGeometry();
+{
+  const N = isMobile ? 800 : 1700, pos = new Float32Array(N*3);
+  for(let i=0;i<N;i++){
+    const r = 170 + Math.random()*260, th = Math.random()*Math.PI*2, ph = Math.acos(2*Math.random()-1);
+    pos[i*3]   = r*Math.sin(ph)*Math.cos(th);
+    pos[i*3+1] = r*Math.cos(ph)*0.7;
+    pos[i*3+2] = r*Math.sin(ph)*Math.sin(th);
+  }
+  starGeo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+}
+const starMat = new THREE.PointsMaterial({size:1.05, map:dotTex, color:theme.starC, transparent:true,
+  opacity:theme.starOp, depthWrite:false, sizeAttenuation:true});
+scene.add(new THREE.Points(starGeo, starMat));
+
+/* ---------- platforms & nodes ---------- */
+const byId = {}; COMPANIES.forEach(c => byId[c.id] = c);
+const layerNodes = LAYERS.map(()=>[]); COMPANIES.forEach(c => layerNodes[c.layer].push(c));
+const platforms = [], nodeMeshes = [];
+const LY = i => -21.25 + i*8.5;
+
+LAYERS.forEach((L, i) => {
+  const n = layerNodes[i].length;
+  const w = n*5.9 + 7, d = 11;
+  const g = new THREE.Group(); g.position.y = LY(i);
+
+  const slab = new THREE.Mesh(new THREE.BoxGeometry(w, .65, d),
+    new THREE.MeshStandardMaterial({color:L.color, transparent:true, opacity:theme.platOp,
+      roughness:.4, metalness:.1, emissive:L.color, emissiveIntensity:.06, depthWrite:false}));
+  g.add(slab);
+  const edgesL = new THREE.LineSegments(new THREE.EdgesGeometry(slab.geometry),
+    new THREE.LineBasicMaterial({color:L.color, transparent:true, opacity:.55}));
+  g.add(edgesL);
+  const grid = new THREE.GridHelper(1, 10, L.color, L.color);
+  grid.scale.set(w, 1, d); grid.position.y = .34;
+  grid.material.transparent = true; grid.material.opacity = theme.gridOp; grid.material.depthWrite = false;
+  g.add(grid);
+
+  const lbl = textSprite((cx,W,H)=>{
+    cx.font = '600 30px "JetBrains Mono", monospace'; cx.textBaseline = 'middle';
+    cx.fillStyle = '#'+L.color.toString(16).padStart(6,'0');
+    cx.globalAlpha = .95; cx.fillText((i+1)+' · '+L.name.toUpperCase(), 8, H/2);
+  }, 640, 48, 13.5);
+  lbl.position.set(-w/2 - 2, 1.6, -d/2 - 1); lbl.center.set(0,.5);
+  g.add(lbl);
+
+  platforms.push({group:g, slab, edgesL, grid, lbl, layer:i});
+  scene.add(g);
+});
+
+const SHORT = {deepmind:'DeepMind', metaai:'Meta AI', skhynix:'SK Hynix', samsung:'Samsung', smic:'SMIC',
+  openai:'OpenAI', anthropic:'Anthropic', xai:'xAI', mistral:'Mistral', deepseek:'DeepSeek'};
+
+COMPANIES.forEach(c => {
+  const sibs = layerNodes[c.layer], idx = sibs.indexOf(c), n = sibs.length;
+  const spacing = 5.9;
+  const x = (idx - (n-1)/2) * spacing;
+  const z = (idx % 2 === 0 ? -1 : 1) * 1.7;
+  const r = c.kind === 'sub' ? .92 : .7 + Math.sqrt(c.cap || 110)/46;
+  const col = LAYERS[c.layer].color;
+
+  const grp = new THREE.Group();
+  grp.position.set(x, LY(c.layer) + .8 + r, z);
+
+  const geo = c.kind === 'private' ? new THREE.OctahedronGeometry(r*1.12, 0) : new THREE.SphereGeometry(r, 36, 24);
+  const mat = new THREE.MeshStandardMaterial({color:col, emissive:col, emissiveIntensity:theme.emiss,
+    roughness:.5, metalness:.05, transparent:true});
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.userData.company = c;
+  grp.add(mesh);
+
+  const halo = new THREE.Sprite(new THREE.SpriteMaterial({map:haloTex, color:col, transparent:true,
+    opacity:theme.haloOp, blending:theme.haloBlend, depthWrite:false}));
+  halo.scale.setScalar(r*6.4);
+  grp.add(halo);
+
+  const name = SHORT[c.id] || c.ticker;
+  const lbl = textSprite((cx,W,H)=>{
+    cx.font = '700 34px Inter, sans-serif'; cx.textAlign = 'center'; cx.textBaseline = 'middle';
+    cx.shadowColor = theme === THEMES.dark ? 'rgba(0,0,0,.8)' : 'rgba(255,255,255,.8)'; cx.shadowBlur = 7;
+    cx.fillStyle = theme.ink; cx.fillText(name, W/2, H/2 - 12);
+    cx.shadowBlur = 0; cx.font = '500 21px "JetBrains Mono", monospace'; cx.fillStyle = theme.sub;
+    cx.fillText(c.cap ? (c.kind==='private' ? '$'+c.cap+'B val.' : '$'+(c.cap>=1000 ? (c.cap/1000).toFixed(2)+'T' : c.cap+'B')) : '—', W/2, H/2 + 16);
+  }, 256, 96, 6.1);
+  lbl.position.y = -(r + 1.65); grp.add(lbl);
+
+  c._g = grp; c._mesh = mesh; c._halo = halo; c._lbl = lbl; c._r = r;
+  nodeMeshes.push(mesh);
+  scene.add(grp);
+});
+
+/* ---------- edges ---------- */
+const edgeObjs = [];
+const edgeGroup = new THREE.Group(); scene.add(edgeGroup);
+EDGES.forEach((e, i) => {
+  const [fa, ta, type, label] = e;
+  const A = byId[fa]._g.position.clone(), B = byId[ta]._g.position.clone();
+  A.y += byId[fa]._r*.5; B.y += byId[ta]._r*.5;
+  const mid = A.clone().lerp(B, .5);
+  const dir = B.clone().sub(A); const len = dir.length();
+  const side = (i % 2 ? 1 : -1) * (1 + (i % 3)) * .9;
+  const perp = new THREE.Vector3().crossVectors(dir.clone().normalize(), new THREE.Vector3(0,1,0)).multiplyScalar(side + len*.06*Math.sign(side));
+  const lift = Math.abs(B.y - A.y) < 2 ? 2.6 + len*.1 : 1.2 + len*.14;
+  const cp = mid.add(perp).add(new THREE.Vector3(0, lift, 0));
+  const curve = new THREE.QuadraticBezierCurve3(A, cp, B);
+  const geo = new THREE.BufferGeometry().setFromPoints(curve.getPoints(40));
+  const mat = new THREE.LineBasicMaterial({color:ETYPES[type].c, transparent:true, opacity:theme.edgeOp, depthWrite:false});
+  const line = new THREE.Line(geo, mat);
+  edgeGroup.add(line);
+  edgeObjs.push({line, curve, type, from:fa, to:ta, label, visible:true});
+});
+
+/* flow particles: 3 per edge */
+const PPE = 3, pCount = EDGES.length * PPE;
+const pGeo = new THREE.BufferGeometry();
+const pPos = new Float32Array(pCount*3), pCol = new Float32Array(pCount*3);
+const tmpC = new THREE.Color();
+edgeObjs.forEach((eo, i) => { tmpC.set(ETYPES[eo.type].c);
+  for(let k=0;k<PPE;k++){ const j=(i*PPE+k)*3; pCol[j]=tmpC.r; pCol[j+1]=tmpC.g; pCol[j+2]=tmpC.b; }});
+pGeo.setAttribute('position', new THREE.BufferAttribute(pPos,3));
+pGeo.setAttribute('color', new THREE.BufferAttribute(pCol,3));
+const pMat = new THREE.PointsMaterial({size:1.25, map:dotTex, vertexColors:true, transparent:true,
+  opacity:.55, depthWrite:false, blending:THREE.AdditiveBlending, sizeAttenuation:true});
+const particles = new THREE.Points(pGeo, pMat); scene.add(particles);
+let flowOn = !RM;
+
+function updateParticles(t){
+  const arr = pGeo.attributes.position.array;
+  edgeObjs.forEach((eo, i) => {
+    for(let k=0;k<PPE;k++){
+      const j = (i*PPE+k)*3;
+      if(!eo.visible || eo.dimmed){ arr[j+1] = -9999; continue; }
+      const u = flowOn ? (t*.085 + i*.13 + k/PPE) % 1 : (k+1)/(PPE+1);
+      const p = eo.curve.getPoint(u);
+      arr[j] = p.x; arr[j+1] = p.y; arr[j+2] = p.z;
+    }
+  });
+  pGeo.attributes.position.needsUpdate = true;
+}
+
+/* ---------- visibility, highlight, focus ---------- */
+const layerOn = LAYERS.map(()=>true);
+let edgesOn = true, selected = null;
+
+function applyFilters(){
+  COMPANIES.forEach(c => { c._g.visible = layerOn[c.layer]; });
+  edgeObjs.forEach(eo => {
+    eo.visible = edgesOn && byId[eo.from]._g.visible && byId[eo.to]._g.visible;
+    eo.line.visible = eo.visible && !eo.dimmed;
+  });
+  platforms.forEach(p => {
+    const on = layerOn[p.layer];
+    p.slab.material.opacity = on ? theme.platOp : .03;
+    p.edgesL.material.opacity = on ? .55 : .1;
+    p.grid.material.opacity = on ? theme.gridOp : .02;
+    p.lbl.material.opacity = on ? 1 : .18;
+  });
+}
+
+function setHighlight(id){
+  const near = new Set([id]);
+  edgeObjs.forEach(eo => {
+    const hit = eo.from === id || eo.to === id;
+    eo.dimmed = !hit;
+    eo.line.material.opacity = hit ? .95 : .05;
+    eo.line.visible = eo.visible;
+    if(hit){ near.add(eo.from); near.add(eo.to); }
+  });
+  COMPANIES.forEach(c => {
+    const on = near.has(c.id);
+    c._mesh.material.emissiveIntensity = on ? theme.emiss*1.5 : theme.emiss*.18;
+    c._mesh.material.opacity = on ? 1 : .35;
+    c._halo.material.opacity = on ? Math.min(theme.haloOp*1.5,.85) : theme.haloOp*.12;
+    c._lbl.material.opacity = on ? 1 : .2;
+  });
+}
+function clearHighlight(){
+  edgeObjs.forEach(eo => { eo.dimmed = false; eo.line.material.opacity = theme.edgeOp; eo.line.visible = eo.visible; });
+  COMPANIES.forEach(c => {
+    c._mesh.material.emissiveIntensity = theme.emiss; c._mesh.material.opacity = 1;
+    c._halo.material.opacity = theme.haloOp; c._lbl.material.opacity = 1;
+  });
+}
+
+function flyTo(pos, tgt, dur = 1.25){
+  if(RM){ camera.position.copy(pos); controls.target.copy(tgt); return; }
+  gsap.to(camera.position, {x:pos.x, y:pos.y, z:pos.z, duration:dur, ease:'power3.inOut', overwrite:'auto'});
+  gsap.to(controls.target, {x:tgt.x, y:tgt.y, z:tgt.z, duration:dur, ease:'power3.inOut', overwrite:'auto'});
+}
+function focusCompany(c, dur){
+  const p = c._g.position;
+  const dir = camera.position.clone().sub(controls.target).normalize();
+  if(dir.lengthSq() < .01) dir.set(.6,.35,.9).normalize();
+  const dist = c._r*9 + 16;
+  const pos = p.clone().add(dir.multiplyScalar(dist)).add(new THREE.Vector3(0, c._r*1.6 + 1.5, 0));
+  flyTo(pos, p.clone(), dur);
+}
+function overviewCam(dur){ flyTo(HOME.pos, HOME.tgt, dur ?? 1.4); }
+
+/* ---------- picking ---------- */
+const ray = new THREE.Raycaster(); const mouse = new THREE.Vector2();
+let hovered = null, downXY = null;
+const tip = $('#tip');
+
+function pick(ev){
+  const x = ev.clientX ?? (ev.touches && ev.touches[0].clientX);
+  const y = ev.clientY ?? (ev.touches && ev.touches[0].clientY);
+  if(x == null) return null;
+  mouse.x = (x/innerWidth)*2 - 1; mouse.y = -(y/innerHeight)*2 + 1;
+  ray.setFromCamera(mouse, camera);
+  const hits = ray.intersectObjects(nodeMeshes.filter(m => m.parent.visible), false);
+  return hits.length ? hits[0].object.userData.company : null;
+}
+renderer.domElement.addEventListener('pointermove', ev => {
+  const c = pick(ev);
+  if(c !== hovered){
+    if(hovered && !RM) gsap.to(hovered._mesh.scale, {x:1,y:1,z:1,duration:.3,overwrite:'auto'});
+    hovered = c;
+    document.body.style.cursor = c ? 'pointer' : '';
+    if(c){
+      if(!RM) gsap.to(c._mesh.scale, {x:1.22,y:1.22,z:1.22,duration:.3,overwrite:'auto'});
+      tip.innerHTML = `<b>${c.name}</b><span>${c.role}</span>`;
+      tip.style.opacity = 1;
+    } else tip.style.opacity = 0;
+  }
+  if(c){ tip.style.left = Math.min(ev.clientX + 16, innerWidth - 250) + 'px'; tip.style.top = (ev.clientY + 14) + 'px'; }
+  idleReset();
+});
+renderer.domElement.addEventListener('pointerdown', ev => { downXY = [ev.clientX, ev.clientY]; idleReset(); });
+renderer.domElement.addEventListener('pointerup', ev => {
+  if(!downXY) return;
+  const moved = Math.hypot(ev.clientX - downXY[0], ev.clientY - downXY[1]); downXY = null;
+  if(moved > 6) return;
+  const c = pick(ev);
+  if(c) select(c); else if(!tourActive) deselect();
+});
+
+/* idle autorotate */
+let idleT = 0;
+function idleReset(){ idleT = 0; controls.autoRotate = false; }
+['wheel','keydown','touchstart'].forEach(e => addEventListener(e, idleReset, {passive:true}));
+
+/* ============================== UI ============================== */
+const panel = $('#panel');
+
+function fmtCap(c){
+  if(!c.cap) return '—';
+  return c.cap >= 1000 ? '$'+(c.cap/1000).toFixed(2)+'T' : '$'+c.cap+'B';
+}
+function select(c){
+  selected = c;
+  setHighlight(c.id);
+  focusCompany(c, 1.15);
+  const L = LAYERS[c.layer];
+  $('#pTags').innerHTML =
+    `<span class="tag layer" style="background:${L.hex}">${L.name}</span>`+
+    `<span class="tag">${c.kind === 'public' ? c.ticker : c.kind === 'sub' ? c.ticker : 'Private'}</span>`+
+    `<span class="tag">${c.hq}</span>`;
+  $('#pName').textContent = c.name;
+  $('#pSub').textContent = c.role;
+  const capLbl = c.kind === 'private' ? 'Valuation' : c.kind === 'sub' ? 'Ownership' : 'Market cap';
+  const capVal = c.kind === 'sub' ? c.ticker.replace(/[()]/g,'') : fmtCap(c);
+  const capSub = c.capLabel ? c.capLabel : (c.cap ? 'close of '+ASOF : c.kind==='sub' ? 'consolidated in parent' : 'not in dataset');
+  const g = c.rev.g || '';
+  const gCls = /^[+~]/.test(g) ? 'up' : /^[-−]/.test(g) ? 'dn' : '';
+  $('#pMetrics').innerHTML =
+    `<div class="metric"><div class="k">${capLbl}</div><div class="v">${capVal}</div><div class="s">${capSub}</div></div>`+
+    `<div class="metric"><div class="k">${c.rev.l}</div><div class="v">${c.rev.v} ${g?`<span class="${gCls}" style="font-size:13px">${g}</span>`:''}</div><div class="s">latest reported</div></div>`;
+  $('#pDesc').textContent = c.desc;
+  $('#pStr').innerHTML = c.str.map(s=>`<li>${s}</li>`).join('');
+  $('#pRisk').innerHTML = c.risk.map(s=>`<li>${s}</li>`).join('');
+  const conns = [];
+  edgeObjs.forEach(eo => {
+    if(eo.from === c.id) conns.push({id:eo.to, dir:'→', label:eo.label});
+    else if(eo.to === c.id) conns.push({id:eo.from, dir:'←', label:eo.label});
+  });
+  $('#pDeps').innerHTML = conns.length ? conns.map(x =>
+    `<button class="dep" data-id="${x.id}" title="${x.label}">${x.dir} ${byId[x.id].name}</button>`).join('')
+    : '<span style="font-size:12px;color:var(--ink-faint)">—</span>';
+  $('#pDeps').querySelectorAll('.dep').forEach(b => b.onclick = () => select(byId[b.dataset.id]));
+  $('#pSrc').textContent = `Figures as of ${ASOF} (market data) and the latest reported quarter. Sources: company filings & reporting listed in the handbook references. Educational use only — not investment advice.`;
+  panel.classList.add('open');
+}
+function deselect(){
+  selected = null; panel.classList.remove('open'); clearHighlight();
+}
+$('#panelClose').onclick = deselect;
+
+/* ---------- search ---------- */
+const searchEl = $('#search'), resultsEl = $('#results');
+let resIdx = -1;
+function renderResults(q){
+  const s = q.trim().toLowerCase();
+  if(!s){ resultsEl.classList.remove('open'); return; }
+  const score = c => {
+    const n = c.name.toLowerCase(), tk = (c.ticker||'').toLowerCase();
+    if(n.startsWith(s) || tk.startsWith(s)) return 4;
+    if(n.includes(s) || tk.includes(s)) return 3;
+    if(LAYERS[c.layer].name.toLowerCase().includes(s)) return 2;
+    if(c.role.toLowerCase().includes(s)) return 1;
+    return 0;
+  };
+  const hits = COMPANIES.map(c => [score(c), c]).filter(x => x[0] > 0)
+    .sort((a,b) => b[0] - a[0]).map(x => x[1]).slice(0,8);
+  if(!hits.length){ resultsEl.classList.remove('open'); return; }
+  resIdx = -1;
+  resultsEl.innerHTML = hits.map(c =>
+    `<button data-id="${c.id}" role="option"><span class="dot" style="background:${LAYERS[c.layer].hex}"></span>${c.name}<span class="tic">${c.kind==='public'?c.ticker:c.kind}</span></button>`).join('');
+  resultsEl.classList.add('open');
+  resultsEl.querySelectorAll('button').forEach(b => b.onclick = () => { select(byId[b.dataset.id]); resultsEl.classList.remove('open'); searchEl.value=''; searchEl.blur(); });
+}
+searchEl.addEventListener('input', e => renderResults(e.target.value));
+searchEl.addEventListener('keydown', e => {
+  const btns = [...resultsEl.querySelectorAll('button')];
+  if(e.key === 'ArrowDown' || e.key === 'ArrowUp'){
+    e.preventDefault(); if(!btns.length) return;
+    resIdx = (resIdx + (e.key==='ArrowDown'?1:-1) + btns.length) % btns.length;
+    btns.forEach((b,i)=>b.classList.toggle('active', i===resIdx));
+  } else if(e.key === 'Enter' && btns.length){ (btns[resIdx>=0?resIdx:0]).click(); }
+  else if(e.key === 'Escape'){ resultsEl.classList.remove('open'); searchEl.blur(); }
+});
+document.addEventListener('click', e => { if(!e.target.closest('.searchwrap')) resultsEl.classList.remove('open'); });
+
+/* ---------- legend ---------- */
+const chipsEl = $('#layerchips');
+chipsEl.innerHTML = LAYERS.map((L,i) =>
+  `<button class="lchip" data-i="${i}"><span class="sw" style="background:${L.hex};color:${L.hex}"></span>${L.name}<span class="n">${layerNodes[i].length}</span></button>`).join('');
+chipsEl.querySelectorAll('.lchip').forEach(b => b.onclick = () => {
+  const i = +b.dataset.i; layerOn[i] = !layerOn[i];
+  b.classList.toggle('off', !layerOn[i]);
+  if(selected && !layerOn[selected.layer]) deselect();
+  applyFilters();
+});
+$('#edgeToggle').onclick = () => { edgesOn = !edgesOn; $('#edgeSw').classList.toggle('on', edgesOn); applyFilters(); };
+$('#flowToggle').onclick = () => { flowOn = !flowOn; $('#flowSw').classList.toggle('on', flowOn); };
+$('#legendToggle').onclick = () => $('#legend').classList.toggle('open');
+
+/* ---------- overlays ---------- */
+const openOverlay = id => { $('#'+id).classList.add('open'); };
+const closeOverlays = () => document.querySelectorAll('.overlay.open').forEach(o => o.classList.remove('open'));
+document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => $('#'+b.dataset.close).classList.remove('open'));
+document.querySelectorAll('.overlay').forEach(o => o.addEventListener('click', e => { if(e.target === o) o.classList.remove('open'); }));
+$('#btnHelp').onclick = () => openOverlay('help');
+$('#btnTimeline').onclick = () => openOverlay('timelineOverlay');
+$('#btnTable').onclick = () => { buildTable(); openOverlay('tableOverlay'); };
+$('#btnTours').onclick = () => openOverlay('toursOverlay');
+
+/* ---------- timeline ---------- */
+const ERA_C = {'Foundations':'#7c97b5','Deep learning':'#7da794','Transformers':'#9a8cb5','GenAI era':'#b48794','Supercycle':'#c0a468'};
+$('#tlwrap').innerHTML = MILESTONES.map(m =>
+  `<div class="tcard" style="--c:${ERA_C[m.e]}"><div class="yr">${m.y}</div><div class="er">${m.e}</div><h5>${m.t}</h5><p>${m.d}</p></div>`).join('');
+
+/* ---------- tours ---------- */
+let tourActive = false, tour = null, stepI = 0;
+$('#tourList').innerHTML = TOURS.map((t,i) =>
+  `<button class="tourcard" data-i="${i}"><div class="num">0${i+1}</div><div><h4>${t.title}</h4><p>${t.blurb}</p><div class="meta">${t.time}</div></div></button>`).join('');
+$('#tourList').querySelectorAll('.tourcard').forEach(b => b.onclick = () => { closeOverlays(); startTour(TOURS[+b.dataset.i]); });
+
+function startTour(t){
+  tour = t; tourActive = true; stepI = 0; deselect();
+  $('#tourKicker').textContent = 'Guided tour · ' + t.title;
+  $('#tourDots').innerHTML = t.steps.map((_,i)=>`<i data-i="${i}"></i>`).join('');
+  $('#tourbar').classList.add('open');
+  showStep(0);
+}
+function showStep(i){
+  stepI = i; const st = tour.steps[i];
+  $('#tourTitle').textContent = st.title;
+  $('#tourText').textContent = st.text;
+  $('#tourDots').querySelectorAll('i').forEach((d,k)=>d.classList.toggle('on', k===i));
+  $('#tourPrev').style.visibility = i === 0 ? 'hidden' : 'visible';
+  $('#tourNext').textContent = i === tour.steps.length-1 ? 'Finish ✓' : 'Next →';
+  if(st.focus === 'overview'){ clearHighlight(); overviewCam(1.5); }
+  else { const c = byId[st.focus]; setHighlight(c.id); focusCompany(c, 1.5); }
+}
+function endTour(){
+  tourActive = false; tour = null;
+  $('#tourbar').classList.remove('open');
+  clearHighlight(); overviewCam(1.3);
+}
+$('#tourNext').onclick = () => stepI < tour.steps.length-1 ? showStep(stepI+1) : endTour();
+$('#tourPrev').onclick = () => stepI > 0 && showStep(stepI-1);
+$('#tourExit').onclick = endTour;
+
+/* ---------- data table ---------- */
+let sortKey = 'cap', sortDir = -1;
+const COLS = [
+  {k:'name', t:'Company'}, {k:'ticker', t:'Ticker'}, {k:'layer', t:'Layer'}, {k:'hq', t:'HQ'},
+  {k:'cap', t:'Value ($B)', num:true}, {k:'revv', t:'Latest revenue'}, {k:'gn', t:'YoY', num:true}, {k:'role', t:'Role'}
+];
+function buildTable(){
+  const thead = $('#dataTable thead'), tbody = $('#dataTable tbody');
+  thead.innerHTML = '<tr>' + COLS.map(c =>
+    `<th data-k="${c.k}" class="${c.num?'r':''}">${c.t}${sortKey===c.k ? (sortDir<0?' ↓':' ↑') : ''}</th>`).join('') + '</tr>';
+  const rows = [...COMPANIES].sort((a,b) => {
+    const av = sortKey==='revv' ? a.rev.v : a[sortKey], bv = sortKey==='revv' ? b.rev.v : b[sortKey];
+    if(av == null && bv == null) return 0; if(av == null) return 1; if(bv == null) return -1;
+    return (typeof av === 'number' && typeof bv === 'number' ? av - bv : String(av).localeCompare(String(bv))) * sortDir;
+  });
+  tbody.innerHTML = rows.map(c => {
+    const g = c.gn != null ? (c.gn>=0?'+':'')+c.gn+'%' : (c.rev.g||'—');
+    const gc = c.gn != null ? (c.gn>=0?'up':'dn') : '';
+    return `<tr data-id="${c.id}"><td><span class="ldot" style="background:${LAYERS[c.layer].hex}"></span>${c.name}</td>`+
+    `<td class="mono">${c.ticker}</td><td>${LAYERS[c.layer].name}</td><td>${c.hq}</td>`+
+    `<td class="mono">${c.cap ?? '—'}${c.kind==='private'&&c.cap?' (val.)':''}</td>`+
+    `<td class="mono">${c.rev.v} <span style="opacity:.55;font-size:10px">${c.rev.l}</span></td>`+
+    `<td class="mono ${gc}">${g}</td><td style="white-space:normal;min-width:180px">${c.role}</td></tr>`;
+  }).join('');
+  thead.querySelectorAll('th').forEach(th => th.onclick = () => {
+    const k = th.dataset.k;
+    if(sortKey === k) sortDir *= -1; else { sortKey = k; sortDir = (k==='cap'||k==='gn') ? -1 : 1; }
+    buildTable();
+  });
+  tbody.querySelectorAll('tr').forEach(tr => tr.onclick = () => { closeOverlays(); select(byId[tr.dataset.id]); });
+}
+
+/* exports */
+function download(name, blob){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+}
+$('#expCsv').onclick = () => {
+  const esc = v => '"' + String(v ?? '').replace(/"/g,'""') + '"';
+  const head = 'Company,Ticker,Kind,Layer,HQ,ValueUSDBillions,ValueNote,LatestRevenue,RevenuePeriod,YoYGrowth,Role';
+  const lines = COMPANIES.map(c => [c.name, c.ticker, c.kind, LAYERS[c.layer].name, c.hq, c.cap ?? '',
+    c.capLabel || (c.cap ? 'market cap, '+ASOF : ''), c.rev.v, c.rev.l, c.gn != null ? c.gn+'%' : (c.rev.g||''), c.role].map(esc).join(','));
+  download('ai-ecosystem-2026-06-11.csv', new Blob([head+'\n'+lines.join('\n')], {type:'text/csv'}));
+};
+$('#expJson').onclick = () => {
+  const data = {generated:'AI Ecosystem Explorer', asOf:ASOF, layers:LAYERS.map(l=>l.name),
+    companies:COMPANIES.map(({_g,_mesh,_halo,_lbl,_r,...c}) => c),
+    relationships:EDGES.map(([from,to,type,label]) => ({from,to,type,label})),
+    milestones:MILESTONES, disclaimer:'Educational use only. Not investment advice.'};
+  download('ai-ecosystem-2026-06-11.json', new Blob([JSON.stringify(data,null,2)], {type:'application/json'}));
+};
+$('#expPng').onclick = () => {
+  renderer.render(scene, camera);
+  renderer.domElement.toBlob(b => download('ai-ecosystem-map.png', b));
+};
+
+/* ---------- theme ---------- */
+let light = false;
+$('#btnTheme').onclick = () => {
+  light = !light; document.body.classList.toggle('light', light);
+  theme = light ? THEMES.light : THEMES.dark;
+  scene.background.set(theme.bg); scene.fog.color.set(theme.bg); scene.fog.density = theme.fog;
+  starMat.color.set(theme.starC); starMat.opacity = theme.starOp;
+  COMPANIES.forEach(c => {
+    c._halo.material.blending = theme.haloBlend; c._halo.material.needsUpdate = true;
+  });
+  labelRegistry.forEach(fn => fn());
+  if(selected) setHighlight(selected.id); else clearHighlight();
+  applyFilters();
+};
+
+/* ---------- keyboard ---------- */
+addEventListener('keydown', e => {
+  if(e.target.matches('input')) return;
+  if(e.key === '/'){ e.preventDefault(); searchEl.focus(); }
+  else if(e.key === 'Escape'){
+    if(document.querySelector('.overlay.open')) closeOverlays();
+    else if(tourActive) endTour();
+    else deselect();
+  }
+  else if(e.key === 't') openOverlay('toursOverlay');
+  else if(e.key === 'd'){ buildTable(); openOverlay('tableOverlay'); }
+  else if(tourActive && e.key === 'ArrowRight') $('#tourNext').click();
+  else if(tourActive && e.key === 'ArrowLeft') $('#tourPrev').click();
+});
+
+/* ---------- intro ---------- */
+$('#enterBtn').onclick = () => {
+  $('#intro').classList.add('hide');
+  if(RM) return;
+  gsap.to(camera.position, {x:HOME.pos.x, y:HOME.pos.y, z:HOME.pos.z, duration:2.4, ease:'power3.inOut'});
+  platforms.forEach((p,i) => {
+    gsap.from(p.group.position, {y:p.group.position.y - 7, duration:1.5, delay:.15+i*.12, ease:'power3.out'});
+    [p.slab.material, p.edgesL.material, p.grid.material].forEach(m => {
+      const o = m.opacity; m.opacity = 0;
+      gsap.to(m, {opacity:o, duration:1.4, delay:.15+i*.12});
+    });
+  });
+  COMPANIES.forEach((c,i) => {
+    const y = c._g.position.y;
+    gsap.from(c._g.position, {y:y-5, duration:1.3, delay:.5 + c.layer*.12 + (i%7)*.04, ease:'power3.out'});
+    c._g.scale.setScalar(.01);
+    gsap.to(c._g.scale, {x:1,y:1,z:1, duration:1.1, delay:.5 + c.layer*.12 + (i%7)*.04, ease:'back.out(1.6)'});
+  });
+};
+
+/* ---------- loop ---------- */
+const clock = new THREE.Clock();
+applyFilters();
+updateParticles(0);
+
+function loop(){
+  requestAnimationFrame(loop);
+  if(document.hidden) return;
+  const dt = clock.getDelta(), t = clock.elapsedTime;
+  idleT += dt;
+  if(idleT > 14 && !tourActive && !selected && !RM){ controls.autoRotate = true; controls.autoRotateSpeed = .5; }
+  controls.update();
+  COMPANIES.forEach(c => { if(c.kind === 'private') c._mesh.rotation.y += dt*.45; });
+  updateParticles(t);
+  renderer.render(scene, camera);
+}
+loop();
+
+addEventListener('resize', () => {
+  camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+</script>
+
+
+
+</body>
+</html>

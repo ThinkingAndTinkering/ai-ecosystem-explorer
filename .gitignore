@@ -1,0 +1,4 @@
+dist/
+verify/*.png
+verify/handbook_print.html
+.DS_Store

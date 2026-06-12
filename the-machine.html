@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The $725 Billion Machine — an interactive tour of the AI ecosystem</title>
+<meta name="description" content="An interactive engineering-and-economics essay on the AI ecosystem: 61 companies, 10 layers, three calculators. Can the math close? Data as of June 11–12, 2026.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,420;0,9..144,560;0,9..144,640;1,9..144,420&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f6f3ec; --paper2:#efebe1; --card:#fcfaf5; --ink:#22252d; --dim:#5b5f6a; --faint:#8e9098;
+  --hair:#d9d4c7; --hair2:#c8c2b2;
+  --accent:#4f5e8e; --accent-ink:#3d4a73; --gold:#8a734a; --good:#3e7a55; --bad:#a4453f;
+  --l0:#7c97b5; --l1:#7da794; --l2:#9a8cb5; --l3:#b48794; --l4:#c0a468; --l5:#8aa179;
+  --grid:rgba(34,37,45,.05);
+  --mono:'JetBrains Mono',monospace; --serif:Fraunces,Georgia,serif; --sans:Inter,system-ui,sans-serif;
+}
+html.dark{
+  --paper:#101216; --paper2:#15181d; --card:#1a1d23; --ink:#e7e4db; --dim:#a39f93; --faint:#6f7077;
+  --hair:#2b2e36; --hair2:#3a3e48;
+  --accent:#8b9bc4; --accent-ink:#a7b4d6; --gold:#c0a468; --good:#7fa98a; --bad:#c1726d;
+  --grid:rgba(231,228,219,.04);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:
+  repeating-linear-gradient(0deg,var(--grid) 0 1px,transparent 1px 28px),
+  repeating-linear-gradient(90deg,var(--grid) 0 1px,transparent 1px 28px),
+  var(--paper);
+  color:var(--ink);font-size:16px;line-height:1.68;transition:background .4s,color .4s}
+::selection{background:rgba(79,94,142,.22)}
+a{color:var(--accent);text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--accent) 40%,transparent)}
+a:hover{border-bottom-color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
+button{font-family:inherit;color:inherit;background:none;border:none;cursor:pointer}
+
+.wrap{max-width:880px;margin:0 auto;padding:0 22px}
+.wide{max-width:1100px}
+
+/* ---------- progress + top bar ---------- */
+#progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--accent),var(--gold));z-index:90}
+.topnav{position:sticky;top:0;z-index:80;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  background:color-mix(in srgb,var(--paper) 82%,transparent);border-bottom:1px solid var(--hair)}
+.topnav .in{max-width:1100px;margin:0 auto;padding:10px 22px;display:flex;align-items:center;gap:14px}
+.topnav .t{font-family:var(--serif);font-weight:560;font-size:15px;white-space:nowrap}
+.topnav .links{display:flex;gap:2px;margin-left:auto;overflow-x:auto;scrollbar-width:none}
+.topnav .links::-webkit-scrollbar{display:none}
+.topnav .links a{border:none;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--faint);padding:5px 9px;border-radius:6px;white-space:nowrap}
+.topnav .links a:hover,.topnav .links a.on{color:var(--ink);background:color-mix(in srgb,var(--accent) 14%,transparent)}
+#themeBtn{font-size:15px;padding:4px 9px;border:1px solid var(--hair);border-radius:8px;color:var(--dim)}
+
+/* ---------- hero ---------- */
+header.hero{padding:84px 0 36px;text-align:left}
+.kicker{font-family:var(--mono);font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--accent);margin-bottom:18px}
+h1.title{font-family:var(--serif);font-weight:300;font-size:clamp(40px,6.4vw,72px);line-height:1.05;letter-spacing:-.01em;max-width:820px}
+h1.title b{font-weight:640;color:var(--accent-ink, var(--accent))}
+.standfirst{margin:26px 0 8px;font-size:18.5px;line-height:1.7;color:var(--dim);max-width:720px}
+.byline{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-top:18px}
+.disclaim{margin-top:22px;padding:11px 15px;border:1px dashed var(--hair2);border-radius:9px;font-size:12.5px;color:var(--faint);max-width:720px}
+
+/* ---------- stat strip (the argument in six numbers) ---------- */
+.striphead{margin:34px 0 10px;font-family:var(--mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold)}
+.statstrip{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--hair);
+  border:1px solid var(--hair);border-radius:12px;overflow:hidden;margin:0 0 8px}
+@media(max-width:620px){.statstrip{grid-template-columns:repeat(2,1fr)}}
+a.stat{display:block;background:var(--card);padding:16px 16px 12px;border-bottom:none;color:inherit;transition:background .18s}
+a.stat:hover{background:color-mix(in srgb,var(--accent) 9%,var(--card))}
+.stat .v{font-family:var(--serif);font-weight:560;font-size:26px;line-height:1.05}
+.stat .k{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-top:6px;line-height:1.5}
+.stat .go{font-family:var(--mono);font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-top:8px}
+a.stat:hover .go{text-decoration:underline}
+
+/* ---------- sections ---------- */
+section{padding:48px 0 10px}
+.secnum{font-family:var(--mono);font-size:10.5px;letter-spacing:.26em;color:var(--gold);text-transform:uppercase;margin-bottom:10px}
+h2{font-family:var(--serif);font-weight:560;font-size:clamp(26px,3.6vw,36px);line-height:1.18;margin-bottom:16px;max-width:760px}
+h3{font-family:var(--serif);font-weight:560;font-size:20px;margin:26px 0 10px}
+p{margin:0 0 14px;max-width:760px}
+p.big{font-size:18px;line-height:1.7}
+.dim{color:var(--dim)}
+.claim{font-family:var(--serif);font-style:italic;font-size:21px;line-height:1.55;color:var(--ink);
+  border-left:3px solid var(--gold);padding:6px 0 6px 18px;margin:22px 0;max-width:720px}
+.num{font-family:var(--mono);font-weight:500;font-variant-numeric:tabular-nums}
+sup.fn a{border:none;font-family:var(--mono);font-size:10px;color:var(--gold)}
+.note{font-size:13px;color:var(--faint);max-width:760px}
+
+/* ---------- versus cards ---------- */
+.versus{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:26px 0 10px}
+.vcard{background:var(--card);border:1px solid var(--hair);border-radius:14px;padding:20px 20px 14px;position:relative}
+.vcard .lab{font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint)}
+.vcard .big{font-family:var(--serif);font-weight:640;font-size:40px;line-height:1.05;margin:8px 0 2px}
+.vcard.spend .big{color:var(--bad)} .vcard.earn .big{color:var(--good)}
+.vcard .sub{font-size:12px;color:var(--dim);margin-bottom:12px}
+.vcard table{width:100%;border-collapse:collapse;font-size:12px}
+.vcard td{padding:4.5px 0;border-top:1px solid var(--hair);color:var(--dim)}
+.vcard td:last-child{text-align:right;font-family:var(--mono);font-size:11px;color:var(--ink);white-space:nowrap}
+.ratio{grid-column:1/-1;text-align:center;padding:10px 0 2px}
+.ratio .r{font-family:var(--serif);font-weight:640;font-size:30px}
+.ratio .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint)}
+@media(max-width:700px){.versus{grid-template-columns:1fr}}
+
+/* ---------- calculators ---------- */
+.calc{background:var(--card);border:1.5px solid var(--hair2);border-radius:16px;padding:22px;margin:26px 0;
+  box-shadow:0 10px 30px rgba(30,30,20,.06)}
+.calc .chead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.calc h3{margin:0;font-size:21px}
+.calc .ctag{font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:#fff;
+  background:var(--accent);border-radius:99px;padding:3px 9px}
+.calc .cdesc{font-size:13.5px;color:var(--dim);margin-bottom:16px;max-width:680px}
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+@media(max-width:760px){.cgrid{grid-template-columns:1fr}}
+.ctrl{margin-bottom:14px}
+.ctrl .row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px}
+.ctrl label{font-size:12.5px;font-weight:600}
+.ctrl .val{font-family:var(--mono);font-size:12.5px;color:var(--accent-ink,var(--accent));font-weight:700}
+.ctrl .hint{font-family:var(--mono);font-size:9px;color:var(--faint);display:flex;justify-content:space-between;margin-top:2px}
+input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:4px;border-radius:99px;
+  background:linear-gradient(90deg,var(--accent) var(--fill,50%),var(--hair) var(--fill,50%));outline-offset:4px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:17px;height:17px;border-radius:99px;
+  background:var(--card);border:2.5px solid var(--accent);cursor:grab;box-shadow:0 1px 5px rgba(0,0,0,.2)}
+input[type=range]::-moz-range-thumb{width:15px;height:15px;border-radius:99px;background:var(--card);border:2.5px solid var(--accent);cursor:grab}
+.outs{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-content:start}
+.out{background:var(--paper2);border:1px solid var(--hair);border-radius:10px;padding:11px 13px}
+.out .k{font-family:var(--mono);font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);line-height:1.5}
+.out .v{font-family:var(--serif);font-weight:640;font-size:23px;line-height:1.1;margin-top:3px}
+.out .s{font-size:10.5px;color:var(--dim);margin-top:2px;line-height:1.45}
+.out.hero2{grid-column:1/-1}
+.out.hero2 .v{font-size:30px}
+.badge{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.1em;
+  padding:3px 10px;border-radius:6px;margin-left:8px;vertical-align:4px}
+.badge.ok{background:color-mix(in srgb,var(--good) 16%,transparent);color:var(--good);border:1px solid var(--good)}
+.badge.no{background:color-mix(in srgb,var(--bad) 14%,transparent);color:var(--bad);border:1px solid var(--bad)}
+.assume{margin-top:14px;border-top:1px dashed var(--hair2);padding-top:6px}
+.assume summary{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);cursor:pointer;padding:6px 0}
+.assume .in{font-size:12.5px;color:var(--dim);line-height:1.7;padding:4px 0 8px}
+.assume code{font-family:var(--mono);font-size:11px;background:var(--paper2);padding:1px 5px;border-radius:4px}
+#gapChart{width:100%;height:130px;margin-top:4px}
+
+/* ---------- machine diagram ---------- */
+.machine{margin:28px 0 6px}
+.mrow{display:grid;grid-template-columns:150px 1fr 190px;gap:0;align-items:stretch;border:1px solid var(--hair);
+  border-bottom:none;background:var(--card);transition:background .2s}
+.mrow:first-child{border-radius:12px 12px 0 0}
+.mrow:last-child{border-bottom:1px solid var(--hair);border-radius:0 0 12px 12px}
+.mrow:hover{background:color-mix(in srgb,var(--accent) 6%,var(--card))}
+.mrow a{border:none;color:inherit;display:contents}
+.mrow .ml{padding:11px 14px;border-right:3px solid var(--lc);display:flex;align-items:center;gap:9px}
+.mrow .ml .t{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink);font-weight:700;line-height:1.4}
+.mrow .mm{padding:11px 14px;font-size:12px;color:var(--dim);display:flex;align-items:center}
+.mrow .mr{padding:9px 14px;border-left:1px solid var(--hair);display:flex;flex-direction:column;justify-content:center;text-align:right}
+.mrow .mr .v{font-family:var(--mono);font-size:12.5px;font-weight:700}
+.mrow .mr .v.rev{color:var(--gold);margin-top:5px}
+.mrow .mr .k{font-family:var(--mono);font-size:7.5px;letter-spacing:.1em;color:var(--faint);text-transform:uppercase;line-height:1.5}
+.mrow.mtotal{border-top:2px solid var(--ink);background:var(--paper2)}
+.mrow.mtotal .ml .t{font-weight:700}
+.flowlegend{display:flex;gap:22px;margin-top:10px;font-family:var(--mono);font-size:10px;color:var(--faint);letter-spacing:.06em;flex-wrap:wrap}
+.flowlegend i{font-style:normal}
+@media(max-width:640px){.mrow{grid-template-columns:118px 1fr}.mrow .mr{display:none}}
+
+/* ---------- layer sections & company cards ---------- */
+.layersec{border-top:1px solid var(--hair);margin-top:30px}
+.lhead{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.lhead .swatch{width:13px;height:13px;border-radius:4px;align-self:center}
+.lhead .lmeta{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin-left:auto}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(252px,1fr));gap:12px;margin:18px 0 8px}
+details.card{background:var(--card);border:1px solid var(--hair);border-radius:12px;overflow:hidden;transition:border-color .2s, box-shadow .2s}
+details.card:hover{border-color:var(--hair2);box-shadow:0 6px 18px rgba(30,30,20,.07)}
+details.card[open]{border-color:var(--accent)}
+details.card summary{list-style:none;cursor:pointer;padding:13px 14px 11px;position:relative}
+details.card summary::-webkit-details-marker{display:none}
+details.card summary::after{content:"+";position:absolute;top:9px;right:13px;font-family:var(--mono);color:var(--faint);font-size:14px}
+details.card[open] summary::after{content:"–"}
+.card .tk{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--lc,var(--accent))}
+.card .nm{font-family:var(--serif);font-weight:560;font-size:16.5px;line-height:1.2;margin:2px 0 1px}
+.card .cap{font-family:var(--mono);font-size:10.5px;color:var(--dim)}
+.card .statline{margin-top:8px;padding-top:8px;border-top:1px solid var(--hair);font-size:11.5px;line-height:1.5;color:var(--dim)}
+.card .statline b{color:var(--ink);font-weight:600}
+.card .inner{padding:0 14px 13px;font-size:11.5px;line-height:1.55;color:var(--dim)}
+.card .inner .sr{margin-top:6px}
+.card .inner .sr b{font-family:var(--mono);font-size:8.5px;letter-spacing:.12em;text-transform:uppercase}
+.card .inner .sr.g b{color:var(--good)} .card .inner .sr.r b{color:var(--bad)}
+.card .perf{position:absolute;top:32px;right:13px;font-family:var(--mono);font-size:9.5px;font-weight:700}
+.perf.up{color:var(--good)} .perf.dn{color:var(--bad)}
+
+/* prose callout chips */
+.callout{background:var(--paper2);border:1px solid var(--hair);border-left:3px solid var(--gold);
+  border-radius:9px;padding:12px 16px;margin:16px 0;font-size:13.5px;color:var(--dim);max-width:760px}
+.callout b{color:var(--ink)}
+
+/* ---------- stop divider ---------- */
+.stop{margin:60px 0 8px;text-align:center;border-top:2px solid var(--ink);border-bottom:2px solid var(--ink);padding:16px 8px}
+.stop .s1{font-family:var(--mono);font-weight:700;font-size:15px;letter-spacing:.3em}
+.stop .s2{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;color:var(--dim);margin-top:6px;text-transform:uppercase}
+
+/* ---------- footnotes & footer ---------- */
+.fnsec{border-top:1px solid var(--hair);margin-top:48px;padding-top:18px}
+.fnsec h3{font-size:16px}
+ol.fns{font-size:11.5px;color:var(--dim);line-height:1.65;padding-left:18px;column-count:2;column-gap:26px}
+ol.fns li{margin-bottom:5px;break-inside:avoid}
+@media(max-width:700px){ol.fns{column-count:1}}
+footer{margin:40px 0 60px;padding-top:18px;border-top:1px solid var(--hair);font-size:12.5px;color:var(--faint)}
+footer .links2{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px}
+.tiny{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<nav class="topnav"><div class="in">
+  <span class="t">The $725B Machine</span>
+  <div class="links" id="navlinks">
+    <a href="#thesis">Thesis</a><a href="#money">The Money</a><a href="#power">Power Wall</a><a href="#gap">Revenue Gap</a><a href="#machine">The Machine</a><a href="#layers">61 Companies</a><a href="#tech">Deep Dive</a><a href="#fns">Sources</a>
+  </div>
+  <button id="themeBtn" aria-label="Toggle theme">◐</button>
+</div></nav>
+
+<header class="hero"><div class="wrap">
+  <div class="kicker">An interactive essay · the AI ecosystem · June 2026</div>
+  <h1 class="title">Humanity is spending <b>$725 billion a year</b> building a machine that earns a tenth of that.<br>Is that insane?</h1>
+  <p class="standfirst">Maybe. Maybe not. This page is the back-of-envelope, company-by-company answer — the full supply chain from lithography to electrons to tokens, with the arithmetic exposed so you can break it yourself. Drag the sliders. Find the errors.</p>
+  <div class="byline">61 companies · 10 layers · 3 calculators · data as of June 11–12, 2026</div>
+  <div class="disclaim">No proprietary data — public filings, earnings calls, and reporting only (sources at the end; deeper citations in the companion handbook). Numbers are rounded and will age fast. Several models below are deliberately simple: the point is the shape of the math, not false precision. Nothing here is investment advice.</div>
+  <div class="striphead">The argument, in six numbers — each one is a chapter below</div>
+  <div class="statstrip">
+    <a class="stat" href="#money"><div class="v num">$725B</div><div class="k">Big-4 capex guided for 2026 (+~77%)</div><div class="go">→ §02 · the money</div></a>
+    <a class="stat" href="#gap"><div class="v num">~10 : 1</div><div class="k">Infrastructure spend vs. AI revenue</div><div class="go">→ §04 · does the math close?</div></a>
+    <a class="stat" href="#power"><div class="v num">945 TWh</div><div class="k">Data-center electricity by 2030 (IEA)</div><div class="go">→ §03 · the power wall</div></a>
+    <a class="stat" href="#L6"><div class="v num">100 GW</div><div class="k">GE Vernova turbine queue — sold out toward 2030</div><div class="go">→ §06 · power & energy</div></a>
+    <a class="stat" href="#L3"><div class="v num">$4.96T</div><div class="k">NVIDIA — the largest company on Earth</div><div class="go">→ §06 · chips</div></a>
+    <a class="stat" href="#L4"><div class="v num">+959%</div><div class="k">Lumentum, 12 months — lasers are sold out</div><div class="go">→ §06 · networking & optics</div></a>
+  </div>
+</div></header>
+
+<section id="thesis"><div class="wrap">
+  <div class="secnum">01 · Why this page exists</div>
+  <h2>The discourse skips straight to "AGI" or "bubble," as if the machine in between were a detail.</h2>
+  <p class="big">It isn't. Between your chat window and the answer sits the most expensive industrial project in history: one Dutch company's light machines, one Taiwanese island's fabs, three memory makers, one chip designer with a 75% gross margin, an optics supply chain that is literally sold out, gas turbines queued to 2030, restarted nuclear plants, and four companies spending a Belgium-sized GDP a year on all of it.</p>
+  <p>Every confident take — <i>"it's the new electricity"</i>, <i>"it's Pets.com with cooling towers"</i> — is built on one cherry-picked fact. The honest position requires holding the whole machine in your head at once. That's hard. So this page does three things:</p>
+  <p><span class="num">1.</span> &nbsp;Puts the <b>money</b> side-by-side (§02) — what goes in vs. what comes out.<br>
+     <span class="num">2.</span> &nbsp;Hands you the two load-bearing models — <b>power</b> (§03) and <b>payback</b> (§04) — as live calculators.<br>
+     <span class="num">3.</span> &nbsp;Walks the <b>entire supply chain</b>, all 61 public-and-private pieces of it, layer by layer (§06).</p>
+  <p class="claim">It's not obviously stupid, and it's not a sure thing. Anyone who tells you otherwise hasn't done the arithmetic — so let's do the arithmetic.</p>
+</div></section>
+
+<section id="money"><div class="wrap">
+  <div class="secnum">02 · The money, side by side</div>
+  <h2>What goes in vs. what comes out (2026, annualized)</h2>
+  <div class="versus">
+    <div class="vcard spend">
+      <div class="lab">Money in · infrastructure</div>
+      <div class="big num">~$725B</div>
+      <div class="sub">Microsoft + Alphabet + Amazon + Meta capital spending guided for calendar 2026 — up ~77% in one year.<sup class="fn"><a href="#fn1">1</a></sup> Excludes Oracle (~$70B FY27), neoclouds, sovereigns.</div>
+      <table>
+        <tr><td>Microsoft</td><td>~$190B</td></tr>
+        <tr><td>Amazon</td><td>~$200B</td></tr>
+        <tr><td>Alphabet</td><td>$180–190B</td></tr>
+        <tr><td>Meta</td><td>$125–145B</td></tr>
+        <tr><td>…of which short-lived (chips/servers)</td><td>~⅔</td></tr>
+      </table>
+    </div>
+    <div class="vcard earn">
+      <div class="lab">Money out · AI revenue</div>
+      <div class="big num">~$70B</div>
+      <div class="sub">Generously-counted annualized AI revenue across the model labs and AI-native software, mid-2026.<sup class="fn"><a href="#fn2">2</a></sup> Growing &gt;60%/yr — that growth rate is the entire bull case.</div>
+      <table>
+        <tr><td>OpenAI (annualized, early '26)</td><td>&gt;$25B</td></tr>
+        <tr><td>Anthropic (run-rate, Apr '26)</td><td>$30B+</td></tr>
+        <tr><td>Microsoft "AI business" (run-rate)</td><td>$37B*</td></tr>
+        <tr><td>Everyone else (apps, tools)</td><td>~$10–20B</td></tr>
+        <tr><td>*overlaps with lab spend — don't double-count</td><td>⚠</td></tr>
+      </table>
+    </div>
+    <div class="ratio"><div class="r num">≈ 10 : 1</div><div class="k">spend-to-revenue · the number this whole page interrogates</div></div>
+  </div>
+  <p>Two readings of the same ratio. <b>Bear:</b> no industry has ever sustained 10:1 — this is tulips with liquid cooling. <b>Bull:</b> every network in history (rail, electricity, telecom, cloud) ran spend-first, and unlike dot-com telecoms, the spenders fund this from ~$100B+ a quarter of operating cash flow while demand is observably supply-constrained — Azure +40%, Google Cloud +63%, AWS +28%, with $1.4T+ of contracted backlog among them.<sup class="fn"><a href="#fn3">3</a></sup></p>
+  <p class="dim">Who's right depends on two physical questions: can they <i>power</i> it (§03), and can revenue <i>outrun depreciation</i> (§04)?</p>
+</div></section>
+
+<section id="power"><div class="wrap">
+  <div class="secnum">03 · Calculator I</div>
+  <h2>The Power Wall</h2>
+  <p>The 2026 consensus inside the industry: the constraint is no longer chips — it's <b>electrons and buildings</b>. Microsoft says it's capacity-constrained through at least 2026; Google says the same; turbine makers are sold out for years.<sup class="fn"><a href="#fn4">4</a></sup> So before arguing about AGI, check whether the grid can even absorb the buildout. Drag the sliders.</p>
+  <div class="calc" id="calcPower">
+    <div class="chead"><h3>Build-rate → grid impact</h3><span class="ctag">live model</span></div>
+    <div class="cdesc">Take a yearly infrastructure spend, convert it to gigawatts of new AI data-center capacity, and express that in units humans can feel: shares of the US grid, power plants, homes.</div>
+    <div class="cgrid">
+      <div>
+        <div class="ctrl"><div class="row"><label for="pCapex">Annual AI infra spend</label><span class="val num" id="pCapexV">$725B</span></div>
+          <input type="range" id="pCapex" min="200" max="1400" step="25" value="725">
+          <div class="hint"><span>$200B bear</span><span>2026 guided: $725B</span><span>$1.4T Stargate-pace</span></div></div>
+        <div class="ctrl"><div class="row"><label for="pCost">All-in cost per gigawatt</label><span class="val num" id="pCostV">$45B</span></div>
+          <input type="range" id="pCost" min="20" max="60" step="1" value="45">
+          <div class="hint"><span>$20B target (Altman)</span><span>~$40–50B today</span><span>$60B worst</span></div></div>
+        <div class="ctrl"><div class="row"><label for="pUtil">Utilization (run-rate)</label><span class="val num" id="pUtilV">80%</span></div>
+          <input type="range" id="pUtil" min="50" max="95" step="1" value="80">
+          <div class="hint"><span>50% bursty</span><span>80% typical AI</span><span>95% flat-out</span></div></div>
+        <div class="ctrl"><div class="row"><label for="pYears">Years at this pace</label><span class="val num" id="pYearsV">4 yrs</span></div>
+          <input type="range" id="pYears" min="1" max="8" step="1" value="4">
+          <div class="hint"><span>1</span><span>through 2030</span><span>8</span></div></div>
+      </div>
+      <div class="outs">
+        <div class="out"><div class="k">New capacity / year</div><div class="v num" id="oGW">—</div><div class="s" id="oGWs"></div></div>
+        <div class="out"><div class="k">Electricity / year (new)</div><div class="v num" id="oTWh">—</div><div class="s" id="oTWhs"></div></div>
+        <div class="out"><div class="k">H-class gas turbines / yr</div><div class="v num" id="oTurb">—</div><div class="s">~0.5 GW each. GE Vernova's entire queue: ~100 GW, sold out toward 2030.<sup class="fn"><a href="#fn5">5</a></sup></div></div>
+        <div class="out"><div class="k">Three Mile Islands / yr</div><div class="v num" id="oTMI">—</div><div class="s">835 MW Crane restart ≈ the unit Microsoft bought. First new electrons: 2027–28.</div></div>
+        <div class="out hero2"><div class="k">After <span id="oYrLab">4</span> years at this pace</div><div class="v"><span class="num" id="oCum">—</span><span id="oVerdict"></span></div><div class="s" id="oCums"></div></div>
+      </div>
+    </div>
+    <details class="assume"><summary>Model & assumptions (click to inspect)</summary><div class="in">
+      <code>GW/yr = spend ÷ cost-per-GW</code> · <code>TWh = GW × 8,760h × utilization ÷ 1,000</code> · US 2025 generation ≈ <code>4,300 TWh</code>; an average US home ≈ <code>10.8 MWh/yr</code>; H-class turbine ≈ <code>0.5 GW</code>; Crane/TMI-1 ≈ <code>0.835 GW</code>. "All-in $/GW" bundles land, shell, power, cooling, and IT; OpenAI-era reality is ~$40–50B/GW with Altman targeting $20B.<sup class="fn"><a href="#fn6">6</a></sup> Cross-check: IEA projects all data centers globally reach ~945 TWh by 2030<sup class="fn"><a href="#fn7">7</a></sup> — if your slider output blows far past that, you've found either the error in the consensus or the reason power politics (PJM record auctions, NJ/VA elections) is now AI politics.
+    </div></details>
+  </div>
+</div></section>
+
+<section id="gap"><div class="wrap">
+  <div class="secnum">04 · Calculator II</div>
+  <h2>The Revenue Gap — does the math close?</h2>
+  <p>Chips depreciate. Whatever you believe about superintelligence, the accountants will book roughly <span class="num">capex ÷ useful-life</span> as a cost every year, forever. Revenue has to outrun that treadmill. Michael Burry's short thesis says useful life is really 2–3 years and earnings are overstated by ~$176B; the hyperscalers say ~5–6 years and point to 2020-era GPUs still earning their keep.<sup class="fn"><a href="#fn8">8</a></sup> Pick your own numbers:</p>
+  <div class="calc" id="calcGap">
+    <div class="chead"><h3>Treadmill vs. growth</h3><span class="ctag">live model</span></div>
+    <div class="cdesc">Industry AI revenue starts at ~$70B and compounds; the buildout keeps adding annualized cost (depreciation + opex). The question is whether — and when — the revenue line crosses the cost line.</div>
+    <div class="cgrid">
+      <div>
+        <div class="ctrl"><div class="row"><label for="gSpend">Buildout pace</label><span class="val num" id="gSpendV">$725B/yr</span></div>
+          <input type="range" id="gSpend" min="200" max="1200" step="25" value="725">
+          <div class="hint"><span>$200B</span><span>$725B (2026)</span><span>$1.2T</span></div></div>
+        <div class="ctrl"><div class="row"><label for="gLife">Useful life of the kit</label><span class="val num" id="gLifeV">5 yrs</span></div>
+          <input type="range" id="gLife" min="2" max="8" step="1" value="5">
+          <div class="hint"><span>2 (Burry)</span><span>5–6 (hyperscalers)</span><span>8</span></div></div>
+        <div class="ctrl"><div class="row"><label for="gRev0">AI revenue today</label><span class="val num" id="gRev0V">$70B</span></div>
+          <input type="range" id="gRev0" min="40" max="150" step="5" value="70">
+          <div class="hint"><span>$40B strict</span><span>~$70B</span><span>$150B generous</span></div></div>
+        <div class="ctrl"><div class="row"><label for="gGrow">Revenue growth / yr</label><span class="val num" id="gGrowV">60%</span></div>
+          <input type="range" id="gGrow" min="15" max="120" step="5" value="60">
+          <div class="hint"><span>15% SaaS-ish</span><span>60% labs now</span><span>120% hyper</span></div></div>
+      </div>
+      <div class="outs">
+        <div class="out hero2"><div class="k">Verdict</div><div class="v" id="gVerdict">—</div><div class="s" id="gVerdictS"></div></div>
+        <div class="out"><div class="k">Annual cost at steady state</div><div class="v num" id="gCost">—</div><div class="s">depreciation + ~20% opex (power, people)</div></div>
+        <div class="out"><div class="k">Revenue needed by 2030</div><div class="v num" id="gNeed">—</div><div class="s">Bain's version of this number: ~$2T.<sup class="fn"><a href="#fn9">9</a></sup></div></div>
+        <svg id="gapChart" viewBox="0 0 460 130" preserveAspectRatio="none" aria-label="Revenue vs cost lines through 2035"></svg>
+      </div>
+    </div>
+    <details class="assume"><summary>Model & assumptions (click to inspect)</summary><div class="in">
+      Year 0 = 2026. Cost line: <code>cost(t) = min(t,life) × spend ÷ life × 1.2</code> — the fleet builds until it's <code>life</code> years deep, then depreciation plateaus; ×1.2 adds operating costs. Revenue line: <code>rev(t) = rev₀ × (1+g)ᵗ</code>, with growth fading 15% per year (nothing compounds at 60% forever). "Closes" = revenue ≥ cost. Deliberately ignores: margins between layers, financing costs, and the possibility that cheaper intelligence creates demand we can't imagine (the Jevons case). It's an envelope, not a DCF — break it.
+    </div></details>
+  </div>
+  <p class="note">Honest takeaways from playing with this: at hyperscaler depreciation schedules (5–6 yrs) and current growth, the math closes around the turn of the decade. At Burry's 2–3 years, it needs growth nobody's modeling, indefinitely. The useful-life debate <i>is</i> the bubble debate.</p>
+</div></section>
+
+<section id="machine"><div class="wrap">
+  <div class="secnum">05 · The machine, schematically</div>
+  <h2>Ten layers. Money flows down, capability flows up.</h2>
+  <p>Each row is a layer of the machine, sized by two consistent yardsticks computed from the 61-company dataset below: <b>combined market value</b> (dark, June 11–12 closes; private labs at last-round valuations) and <b>combined revenue run-rate</b> (gold, annualized). Click any row to jump to its companies. Notice the shape: the market pays the most for chips and clouds; the most <i>revenue</i> flows through clouds and devices; the model layer is tiny in revenue and enormous in valuation — that asymmetry is the whole story.</p>
+  <div class="machine" id="machineDiagram"></div>
+  <div class="flowlegend"><i>⬆ capability flows up (light → chips → tokens)</i><i>⬇ money flows down (subscriptions → capex → wafers)</i></div>
+  <p class="note" style="margin-top:10px">Methodology: revenue = latest reported quarter ×4 or full-year guidance midpoint — <b>whole-company</b> figures (Amazon includes retail, Apple includes iPhones, Samsung includes phones and TVs); Models row counts disclosed lab run-rates only (OpenAI, Anthropic, Mistral — xAI and DeepSeek undisclosed). Value excludes unlisted-here SMIC (HK/STAR), DeepSeek, and labs consolidated inside parents.</p>
+</div></section>
+
+<section id="layers"><div class="wrap wide">
+  <div class="secnum">06 · The supply chain, company by company</div>
+  <h2>61 pieces of the machine</h2>
+  <p style="max-width:760px">Market caps are June 11–12, 2026 (private valuations as dated); each card's stat is from the latest reported quarter. Click any card for its strength / risk. The <span class="num">12-mo</span> badge is the stock's one-year move where verified — it doubles as a map of where the market thinks the bottlenecks are.</p>
+
+  <div class="layersec" id="L0"><div class="lhead"><span class="swatch" style="background:var(--l0)"></span><h3>1 · Design & Equipment</h3><span class="lmeta">7 companies · the tools behind the tools</span></div>
+    <p class="dim">Everything begins with one company: <b>ASML</b> is the only maker of the EUV lithography machines that print advanced chips — export-banned to China entirely. Around it: the deposition/etch/inspection trio (<b>Applied Materials, Lam, KLA</b> — Lam up >4× in a year on the memory boom), the EDA software duopoly (<b>Synopsys, Cadence</b>) every chip is designed in, and <b>Arm</b>, whose architecture is in ~99% of phones and, increasingly, every hyperscaler CPU.</p>
+    <div class="cards" data-layer="0"></div>
+  </div>
+
+  <div class="layersec" id="L1"><div class="lhead"><span class="swatch" style="background:var(--l1)"></span><h3>2 · Fabrication</h3><span class="lmeta">3 companies · where atoms get printed</span></div>
+    <p class="dim"><b>TSMC</b> prints ~70% of the world's foundry output and ~90% of the leading edge at a 50.5% net margin — the single most load-bearing company in the machine, on the single most contested island. <b>Samsung</b> fights on every front at once (foundry #2, memory, devices). <b>SMIC</b> is China's sanctioned national champion, pushing 7nm without EUV at painful yields.</p>
+    <div class="cards" data-layer="1"></div>
+  </div>
+
+  <div class="layersec" id="L2"><div class="lhead"><span class="swatch" style="background:var(--l1)"></span><h3>3 · Memory & Storage</h3><span class="lmeta">4 companies · the supercycle</span></div>
+    <p class="dim">AI chips starve without data, and 2026's defining shortage lives here. HBM is a three-firm oligopoly (<b>SK Hynix</b> ~⅔ of NVIDIA's HBM4, <b>Micron</b>, plus Samsung) — all sold out, with DRAM prices up ~95% in a single quarter. One level down, AI data lakes broke the hard-drive market: <b>Western Digital</b> (+924% in 12 months) is sold out for 2026, <b>Seagate</b> (+618%) allocated into 2027.<sup class="fn"><a href="#fn10">10</a></sup> Your next laptop costs more because of this row.</p>
+    <div class="cards" data-layer="2"></div>
+  </div>
+
+  <div class="layersec" id="L3"><div class="lhead"><span class="swatch" style="background:var(--l2)"></span><h3>4 · Chips & Accelerators</h3><span class="lmeta">7 companies · the profit pool</span></div>
+    <p class="dim"><b>NVIDIA</b> — $81.6B in a quarter, ~75% gross margin, ~zero China revenue — remains the sun the system orbits. The resistance: <b>Broadcom</b> builds the hyperscalers' custom chips ($10.8B AI revenue last quarter, +143%) and triggered June 5's trillion-dollar selloff with one soft guide; <b>AMD</b> is the merchant challenger with OpenAI's 6GW deal; <b>Intel</b> is the state-backed comeback (+~550% in a year); <b>Monolithic Power</b> quietly powers every kilowatt-class GPU socket.</p>
+    <div class="cards" data-layer="3"></div>
+  </div>
+
+  <div class="layersec" id="L4"><div class="lhead"><span class="swatch" style="background:var(--l0)"></span><h3>5 · Networking & Optics</h3><span class="lmeta">7 companies · the nervous system</span></div>
+    <p class="dim">A 100,000-GPU cluster is only as smart as its wiring, and this layer produced 2026's wildest charts. <b>Arista</b> switches the hyperscalers' AI fabrics (AI target: $3.5B). <b>Astera Labs</b> rides inside NVIDIA racks; <b>Credo</b>'s cables grew revenue 206% in a year. The optics squeeze is historic: <b>Lumentum</b>'s lasers are sold out (+959% in 12 months), <b>Coherent</b>'s datacom grew 40%, <b>Ciena</b> (+524%) carries AI traffic between campuses, and <b>Amphenol</b> connects all of it ($9.4B of orders in one quarter).</p>
+    <div class="cards" data-layer="4"></div>
+  </div>
+
+  <div class="layersec" id="L5"><div class="lhead"><span class="swatch" style="background:var(--l3)"></span><h3>6 · Systems & Data Centers</h3><span class="lmeta">7 companies · racks, shells, cooling</span></div>
+    <p class="dim">Someone has to bolt the machine together. <b>Dell</b> booked $24.4B of AI-server orders in a single quarter (~$51B backlog); <b>Super Micro</b> is the fast-turn specialist; <b>Celestica</b> builds the hyperscalers' switches. Inside the building: <b>Vertiv</b> (power & cooling, backlog +109%, co-designing 800-volt racks with NVIDIA) and <b>Eaton</b> (electrical gear, data-center orders up ~240%). The landlords: <b>Equinix</b> and <b>Digital Realty</b>, whose record leasing now waits on grid connections, not customers.</p>
+    <div class="cards" data-layer="5"></div>
+  </div>
+
+  <div class="layersec" id="L6"><div class="lhead"><span class="swatch" style="background:var(--l4)"></span><h3>7 · Power & Energy</h3><span class="lmeta">6 companies · the binding constraint</span></div>
+    <p class="dim">The layer Wall Street discovered last. <b>GE Vernova</b>'s turbine queue hit ~100 GW — slots essentially gone until 2030. The nuclear fleet signed directly with Big Tech: <b>Constellation</b> restarts Three Mile Island for Microsoft (2027) and powers Meta from Clinton; <b>Vistra</b> sells Meta 2.6 GW; <b>Talen</b> sends Amazon 1.92 GW through 2042. <b>NextEra</b> builds renewables at 33-GW-backlog scale, and <b>Oklo</b> — pre-revenue, ~14 GW of letters of intent — is the option on small reactors. Electricity bills already swing elections; this layer is where AI meets politics.<sup class="fn"><a href="#fn11">11</a></sup></p>
+    <div class="cards" data-layer="6"></div>
+  </div>
+
+  <div class="layersec" id="L7"><div class="lhead"><span class="swatch" style="background:var(--l3)"></span><h3>8 · Clouds</h3><span class="lmeta">7 companies · the $725B/yr spenders</span></div>
+    <p class="dim">The hyperscalers turn capex into rentable intelligence: <b>Microsoft</b> (Azure +40%, $627B backlog), <b>Amazon</b> (AWS +28%, >$20B/yr of in-house chips), <b>Alphabet</b> (Cloud +63%, the only full-stack player), and <b>Oracle</b> — the leveraged bet, with a $638B backlog mostly from one customer, negative free cash flow, and a stock 47% off its high. Below them, the neoclouds: <b>CoreWeave</b> ($99B backlog), <b>Nebius</b> (revenue +684%), and <b>IREN</b> (Microsoft's $9.7B GB300 deal) — the high-beta tissue of the boom.</p>
+    <div class="cards" data-layer="7"></div>
+  </div>
+
+  <div class="layersec" id="L8"><div class="lhead"><span class="swatch" style="background:var(--l4)"></span><h3>9 · Models & Intelligence</h3><span class="lmeta">7 labs · where capex becomes capability</span></div>
+    <p class="dim">The labs convert all of the above into tokens. <b>OpenAI</b>: ~900M weekly users, $852B valuation, IPO filed confidentially. <b>Anthropic</b>: $30B+ run-rate, a $965B Series H — the most valuable startup on Earth — and the leaderboard crown as of last Tuesday. <b>Google DeepMind</b> needs no one's chips or cloud. <b>xAI</b> lives inside SpaceX; <b>Meta's</b> lab went closed-source; <b>Mistral</b> carries Europe; <b>DeepSeek</b> proves what China can do with constrained silicon and open weights.</p>
+    <div class="cards" data-layer="8"></div>
+  </div>
+
+  <div class="layersec" id="L9"><div class="lhead"><span class="swatch" style="background:var(--l5)"></span><h3>10 · Applications & Devices</h3><span class="lmeta">6 companies · where it touches you</span></div>
+    <p class="dim">The top of the machine is strangely the cheapest seat: <b>Apple</b> rents its assistant's brain from Google for ~$1B/yr while spending 7% of a hyperscaler's capex — and trades near all-time highs. <b>Meta</b> monetizes AI through ads at $56B a quarter. <b>Tesla</b> bets on intelligence-in-motion. <b>Palantir</b> grew 85% and still fell — perfection was pre-priced. And the SaaS incumbents (<b>Salesforce, ServiceNow</b>) wear 2026's deepest scar: ~$2T of enterprise-software value erased by the agent question.<sup class="fn"><a href="#fn12">12</a></sup></p>
+    <div class="cards" data-layer="9"></div>
+  </div>
+</div></section>
+
+<div class="wrap"><div class="stop">
+  <div class="s1">⚠ &nbsp;STOP&nbsp; ⚠</div>
+  <div class="s2">You are now entering the technical appendix · normal people may exit to the footer</div>
+</div></div>
+
+<section id="tech"><div class="wrap">
+  <div class="secnum">07 · Appendix · unit physics</div>
+  <h2>What does one question actually cost?</h2>
+  <p>All the billions above eventually divide down to a single inference. Google disclosed a median Gemini text prompt at <span class="num">0.24 Wh</span> (and falling — 33× more efficient in a year); Altman has cited ~<span class="num">0.34 Wh</span> for ChatGPT.<sup class="fn"><a href="#fn13">13</a></sup> Scale that by humanity:</p>
+  <div class="calc" id="calcQuery">
+    <div class="chead"><h3>Per-query footprint → planetary load</h3><span class="ctag">live model</span></div>
+    <div class="cgrid">
+      <div>
+        <div class="ctrl"><div class="row"><label for="qWh">Energy per query</label><span class="val num" id="qWhV">0.30 Wh</span></div>
+          <input type="range" id="qWh" min="0.1" max="3" step="0.05" value="0.3">
+          <div class="hint"><span>0.1 efficient</span><span>0.24–0.34 disclosed</span><span>3.0 heavy reasoning</span></div></div>
+        <div class="ctrl"><div class="row"><label for="qPer">Queries / user / day</label><span class="val num" id="qPerV">15</span></div>
+          <input type="range" id="qPer" min="1" max="100" step="1" value="15">
+          <div class="hint"><span>1</span><span>15</span><span>100 agentic</span></div></div>
+        <div class="ctrl"><div class="row"><label for="qUsers">Weekly users worldwide</label><span class="val num" id="qUsersV">1.5B</span></div>
+          <input type="range" id="qUsers" min="0.2" max="4" step="0.1" value="1.5">
+          <div class="hint"><span>0.2B</span><span>~1.5B today (all assistants)</span><span>4B</span></div></div>
+      </div>
+      <div class="outs">
+        <div class="out"><div class="k">Annual energy</div><div class="v num" id="qTWh">—</div><div class="s" id="qTWhS"></div></div>
+        <div class="out"><div class="k">Equivalent homes</div><div class="v num" id="qHomes">—</div><div class="s">at 10.8 MWh/home/yr</div></div>
+        <div class="out hero2"><div class="k">Context</div><div class="v" style="font-size:16px;font-family:var(--sans);font-weight:600" id="qCtx">—</div><div class="s">Chat is the cheap part. Training runs, video generation, and always-on agents — not your questions — are why the Power Wall (§03) exists.</div></div>
+      </div>
+    </div>
+    <details class="assume"><summary>Model & assumptions</summary><div class="in"><code>TWh = Wh × queries/day × users × 365 ÷ 10¹²</code>. Treats weekly users as daily-equivalent users (generous). Excludes training, fine-tuning, video, and idle capacity — the loads that actually dominate. Per-query energy keeps falling (−33×/yr at Google) while volume keeps rising faster: the Jevons treadmill in one slider.</div></details>
+  </div>
+
+  <h3>Choke-point inventory (the short version)</h3>
+  <p class="dim">EUV: <b>one supplier</b> (ASML). Leading-edge fabrication: <b>one island</b> (~90%, TSMC). HBM: <b>three firms</b>, sold out. Advanced packaging: <b>one bottleneck</b> (CoWoS, doubling again). Datacom lasers: <b>sold out</b> (Lumentum, Coherent). Nearline drives: <b>allocated to 2027</b>. H-class turbines: <b>queued to ~2030</b>. Grid interconnects: <b>years</b>. Each is a single point of failure nobody designed — efficiency built this machine; resilience was nobody's job. A longer treatment, with the geopolitics, is in the companion handbook's Chapter 5.</p>
+
+  <div class="callout"><b>What would change my mind, in either direction:</b> backlog-to-cash conversion at the clouds (watch Oracle's), lab gross margins at scale, a working B30A-to-China policy, the 2027 nuclear restarts actually restarting, and whether agentic workloads make the Revenue Gap calculator's growth slider sit above 60% for three more years. This page will age; the sliders are how you keep it honest.</div>
+</div></section>
+
+<section id="fns" class="fnsec"><div class="wrap">
+  <h3>Sources & footnotes</h3>
+  <p class="note" style="margin-bottom:10px">Key citations only — the companion handbook carries 120 full references. Market data: stockanalysis.com, June 11–12, 2026.</p>
+  <ol class="fns">
+    <li id="fn1">Company Q1 2026 earnings calls (Apr 2026): Microsoft ~$190B (CNBC, Apr 29), Amazon ~$200B (Q4'25 call), Alphabet $180–190B (Q1'26 call), Meta $125–145B (Q1'26 release); aggregate ~$725B/+77% — Yahoo Finance, May 2026.</li>
+    <li id="fn2">OpenAI >$25B annualized (Sacra/CNBC, Feb–Mar 2026); Anthropic $30B+ run-rate (company, Apr 7, 2026; ~$47B claimed at Series H, May 28 — company-stated); Microsoft AI run-rate $37B (FY26 Q3 call); Menlo Ventures enterprise-AI estimates (2025).</li>
+    <li id="fn3">Microsoft RPO $627B; Alphabet backlog $462B; AWS $364B + >$100B Anthropic; Oracle RPO $638B — all from Q1/FQ3/FQ4 2026 filings, Apr–Jun 2026.</li>
+    <li id="fn4">Amy Hood, Microsoft FY26 Q3 call (Apr 29, 2026); Sundar Pichai, Alphabet Q1 2026 call ("compute constrained").</li>
+    <li id="fn5">GE Vernova Q1 2026 8-K (Apr 22, 2026): 100 GW backlog + slot reservations, ≥110 GW expected by YE26; Power Engineering call coverage: sold out toward 2030.</li>
+    <li id="fn6">Axios, "OpenAI's trillion-dollar math" (Oct 28, 2025): ~$40–50B/GW today, $20B/GW target.</li>
+    <li id="fn7">IEA, "Energy and AI" (Apr 2025) & "Electricity 2026" (Feb 2026): 415 TWh (2024) → ~945 TWh (2030).</li>
+    <li id="fn8">TechCrunch, "Burry vs NVIDIA" (Nov 27, 2025); Amazon 10-K useful-life disclosures; Levelheaded Investing depreciation analysis (2025–26).</li>
+    <li id="fn9">Bain & Co., 6th Global Technology Report (Sep 23, 2025): ~$2T annual AI revenue needed by 2030.</li>
+    <li id="fn10">TrendForce DRAM contract data (Feb–Jun 2026: 1Q26 +90–95%, industry revenue $97B +81% QoQ); WDC FQ3'26 call ("sold out" CY26); Seagate FQ3'26 call (allocated through CY2027); 52-week moves per stockanalysis.com, Jun 12, 2026.</li>
+    <li id="fn11">PJM capacity auction records (Dec 17, 2025); Axios on NJ/VA elections (Nov 5, 2025); Microsoft–Constellation Crane PPA (Sep 2024); Vistra–Meta (Jan 9, 2026); Talen–Amazon expansion (Jun 11, 2025); Oklo Q1'26 call (May 12, 2026).</li>
+    <li id="fn12">MarketMinute, "The Great SaaS Reset" (Mar 26, 2026): ~$2T enterprise-software market-cap decline, EV/S 5.6×→4.2×.</li>
+    <li id="fn13">MIT Technology Review on Google's 0.24 Wh/prompt disclosure (Aug 21, 2025); Altman blog (Jun 2025): ~0.34 Wh.</li>
+    <li>Layer-section company figures: respective Q1/FQ 2026 press releases and calls (Apr–Jun 2026) — ANET, ALAB, COHR, CIEN (Jun 4), CRDO (Jun 1), LITE, APH, MPWR, SMCI, DELL (May 28), CLS, EQIX, DLR, NBIS, IREN, GEV, VST, CEG, TLN, NEE, OKLO, ETN, VRT — plus the 36 dossiers shared with the AI Ecosystem Explorer.</li>
+  </ol>
+</div></section>
+
+<footer><div class="wrap">
+  <div><b>The $725 Billion Machine</b> — prototype 2 of the AI Ecosystem project · June 2026 edition.</div>
+  <div class="links2">
+    <a href="index.html">↗ 3D Explorer (prototype 1)</a>
+    <a href="handbook.md">↗ The Handbook (markdown)</a>
+    <a href="handbook.pdf">↗ The Handbook (PDF, 31 pp)</a>
+  </div>
+  <p style="margin-top:12px" class="tiny">Educational use only · not investment advice · models are envelopes, not forecasts · break them and tell me where they're wrong</p>
+</div></footer>
+
+<script>
+/* ============ DATA — 61 companies · caps Jun 11–12 2026 ($B) ============ */
+const C = [
+/* 0 · Design & Equipment */
+{l:0,t:'ASML',n:'ASML',c:699,s:'<b>€8.8B</b> Q1 rev (+13%) · FY26 raised to €36–40B · China down to 19% of sales',r:'Sole maker of EUV lithography — the machines advanced chips cannot exist without; export-banned to China.',g:'Literal monopoly; every roadmap routes through it',b:'Export-control whiplash; TSMC skipping High-NA at A14'},
+{l:0,t:'AMAT',n:'Applied Materials',c:439,s:'<b>$7.9B</b> FQ2 rev (+11%) · semi biz seen +30% in CY26',r:'Broadest toolset for deposition, etch, implant — the steps between lithography passes.',g:'Wins whoever wins the fab race',b:'Violently cyclical; China restrictions'},
+{l:0,t:'LRCX',n:'Lam Research',c:453,p:322,s:'<b>$5.8B</b> Mar-qtr rev (record) · memory-fab king',r:'Etch & deposition leader with deep memory exposure — a prime supercycle winner.',g:'Memory capex boom flows straight to it',b:'Most cyclical of the trio; priced for persistence'},
+{l:0,t:'KLAC',n:'KLA',c:315,s:'<b>$3.4B</b> FQ3 rev · >50% of process control',r:'The industry\'s quality department: finds atomic-scale defects; inspection intensity rises every node.',g:'Sticky, high-margin niche dominance',b:'Smaller market than peers; cyclicality'},
+{l:0,t:'SNPS',n:'Synopsys',c:87,s:'<b>$2.3B</b> FQ2 rev · Ansys ($35B) integrating',r:'EDA #1 — the software every advanced chip is designed and verified in.',g:'Duopoly + physics simulation via Ansys',b:'Largest-ever design-software integration risk'},
+{l:0,t:'CDNS',n:'Cadence',c:106,s:'<b>$1.5B</b> Q1 rev (+19%) · FY26 guide raised',r:'EDA #2 — every custom-XPU program is a customer; AI-assisted chip design.',g:'Custom-silicon wave = more design starts',b:'Rich multiple; China rules'},
+{l:0,t:'ARM',n:'Arm',c:366,s:'<b>$4.9B</b> FY26 rev (+23%) · DC royalties doubled · own server CPU: >$2B demand',r:'Licenses the architecture in ~99% of phones and the hyperscalers\' CPUs (Graviton, Grace, Cobalt).',g:'A royalty on nearly every device made',b:'Its own chips may alienate licensees; RISC-V'},
+/* 1 · Fabrication */
+{l:1,t:'TSM',n:'TSMC',c:1840,p:115,s:'<b>$35.9B</b> Q1 rev (+41%) · <b>50.5%</b> net margin · HPC 61% of rev · capex $52–56B',r:'Prints ~70% of foundry output, ~90% of the leading edge; CoWoS packaging was THE 2023–25 bottleneck. $165B committed to Arizona; crown jewels stay in Taiwan.',g:'Yield, scale and trust nobody matches',b:'The single most concentrated geopolitical risk on Earth'},
+{l:1,t:'005930.KS',n:'Samsung Electronics',c:1400,s:'Q1 op profit <b>₩57.2T</b> (~8× YoY) · HBM4 qualified at NVIDIA · Tesla AI6 deal $16.5B',r:'Memory giant + foundry #2 + devices — fighting on every front at once.',g:'Only firm spanning memory, foundry, devices',b:'Foundry far behind TSMC; HBM share lost to SK Hynix'},
+{l:1,t:'0981.HK',n:'SMIC',c:null,cn:'HK/STAR listed',s:'<b>7nm</b> in volume (DUV multi-patterning) · 5nm pilot · capacity targeted ~5× by 2027',r:'China\'s sanctioned national foundry — fabricates Huawei\'s Ascend AI chips without EUV.',g:'Unlimited state backing + captive demand',b:'No EUV = hard physical ceiling; 20–40% yields'},
+/* 2 · Memory & Storage */
+{l:2,t:'000660.KS',n:'SK Hynix',c:1080,s:'<b>₩52.6T</b> Q1 rev (+198%) · <b>72%</b> op margin · ~⅔ of NVIDIA HBM4 · sold out 2026',r:'The HBM champion — first to HBM4 volume for Vera Rubin; crossed $1T in May.',g:'Leads where AI needs memory most',b:'Memory cycles always end; Samsung/Micron closing'},
+{l:2,t:'MU',n:'Micron',c:1120,s:'<b>$23.9B</b> FQ2 rev (+196%) · next-qtr GM guided <b>~81%</b> · HBM sold out',r:'America\'s memory maker, transformed by the supercycle into a trillion-dollar company.',g:'Locked HBM pricing; geopolitically favored',b:'The most cyclical business in tech; 2027–28 supply wave'},
+{l:2,t:'WDC',n:'Western Digital',c:195,p:924,s:'<b>$3.3B</b> FQ3 rev (+45%) · GM <b>50.5%</b> · "pretty much sold out" of HDDs for CY2026',r:'One half of the nearline hard-drive duopoly storing AI data lakes; lead times >52 weeks.',g:'Duopoly pricing power in a genuine shortage',b:'Classic cycle: NAND substitution, double-order unwind'},
+{l:2,t:'STX',n:'Seagate',c:210,p:618,s:'<b>$3.1B</b> FQ3 rev (+44%) · supply allocated <b>through CY2027</b> · HAMR shipping',r:'The other half of the HDD duopoly, with the areal-density (HAMR) technology lead.',g:'Multi-year visibility; cost-per-TB advantage',b:'+618% in a year prices in flawless HAMR execution'},
+/* 3 · Chips */
+{l:3,t:'NVDA',n:'NVIDIA',c:4960,s:'<b>$81.6B</b> Q1 FY27 rev (+85%) · DC $75.2B · GM ~75% · guide $91B · China ≈ $0',r:'Designs the GPUs, networking and CUDA software behind most of the world\'s AI — ~75–90% of accelerator revenue. Vera Rubin ships H2 2026.',g:'CUDA moat + annual platform cadence',b:'Customers becoming competitors; priced for perfection (see June 5)'},
+{l:3,t:'AVGO',n:'Broadcom',c:1830,s:'AI revenue <b>$10.8B</b> Q2 (+143%) · FY26 AI ~$56B · FY27 seen >$100B',r:'Builds the hyperscalers\' custom chips (TPU, MTIA, OpenAI\'s 10GW program) and the Ethernet connecting everything.',g:'Every credible custom-silicon program routes through it',b:'Its one soft guide erased >$1T from chip stocks on Jun 5'},
+{l:3,t:'AMD',n:'AMD',c:796,s:'<b>$10.3B</b> Q1 rev (+38%) · DC +57% · OpenAI 6GW deal + warrant · Helios H2\'26',r:'The only full merchant alternative to NVIDIA — Instinct GPUs, EPYC CPUs, ROCm.',g:'OpenAI and Oracle anchor demand',b:'CUDA gravity; the warrant dilutes if it works'},
+{l:3,t:'INTC',n:'Intel',c:588,p:556,s:'<b>$13.6B</b> Q1 rev (+7%) · 18A shipping (Panther Lake) · US gov ~10% + NVIDIA $5B',r:'The state-backed comeback — the only plausible US-flag leading-edge foundry.',g:'18A is real; Washington literally owns a tenth',b:'Foundry still loses money; AI accelerators years behind'},
+{l:3,t:'QCOM',n:'Qualcomm',c:214,s:'<b>$10.6B</b> FQ2 rev (−3%) · record auto +38% · AI200 racks deploying 2026 (Humain 200MW)',r:'Mobile-chip king entering data-center inference with memory-heavy rack designs.',g:'On-device AI leadership; new TAM optionality',b:'Late entrant against giants; handsets pressured by memory costs'},
+{l:3,t:'MRVL',n:'Marvell',c:246,s:'<b>$2.4B</b> Q1 FY27 rev (+28%) · DC = 76% of revenue · "exceptional AI bookings"',r:'Custom-silicon #2 (Amazon Trainium anchor) plus electro-optics for AI interconnect.',g:'#2 in a market that wants a #2',b:'Concentrated hyperscaler customers; Broadcom looms'},
+{l:3,t:'MPWR',n:'Monolithic Power',c:78,p:139,s:'<b>$804M</b> Q1 rev (+26%) · enterprise-data segment <b>+98%</b> YoY',r:'Voltage regulators and vertical power modules feeding kilowatt-class GPU sockets.',g:'Power content per rack keeps rising',b:'TI/Infineon attacking the 800-volt transition'},
+/* 4 · Networking & Optics */
+{l:4,t:'ANET',n:'Arista Networks',c:207,p:78,s:'<b>$2.7B</b> Q1 rev (+35%) · 2026 AI target raised to <b>$3.5B</b> · billings +54%',r:'Ethernet switching for hyperscaler AI fabrics (Microsoft, Meta anchor) — beating InfiniBand at production scale.',g:'~48% operating margins while growing 35%',b:'Supply-capped guide; two-customer concentration'},
+{l:4,t:'ALAB',n:'Astera Labs',c:64,p:305,s:'<b>$308M</b> Q1 rev (+93%) · Scorpio fabric switch ramping into NVIDIA racks',r:'The connectivity glue inside AI racks: PCIe retimers, fabric switches, smart cables.',g:'Dollar content per rack keeps climbing',b:'~255× earnings prices in flawless execution'},
+{l:4,t:'COHR',n:'Coherent',c:75,p:519,s:'Datacom segment <b>+40%</b> (FQ3 rev $1.8B) · vertically integrated InP lasers',r:'Lasers-through-transceivers supplier of 800G/1.6T optics linking GPUs across clusters.',g:'In-house laser capacity in a laser-short world',b:'Capex-heavy race; industrial arm shrinking'},
+{l:4,t:'CIEN',n:'Ciena',c:64,p:524,s:'<b>$1.57B</b> FQ2 rev (+40%) · FY26 guide raised to +32% · EPS +290%',r:'Coherent-optics leader for data-center interconnect — the links between AI campuses.',g:'DCI incumbency converting AI bandwidth to 40% growth',b:'~150× trailing earnings on 19% margins'},
+{l:4,t:'CRDO',n:'Credo',c:47,p:338,s:'FY26 revenue <b>+206%</b> ($1.3B) · GM 68% · optics >$600M in FY27',r:'Dominant in active electrical cables linking GPUs and switches inside hyperscaler racks.',g:'Category-defining franchise at software margins',b:'Hyperscaler order timing; H1\'27 guided flat-ish'},
+{l:4,t:'LITE',n:'Lumentum',c:72,p:959,s:'<b>$808M</b> FQ3 rev (+90%) · EML lasers <b>sold out</b> · CPO order for 2027',r:'Makes the scarcest part in AI optics — the lasers inside every 800G/1.6T transceiver.',g:'Sold-out capacity = pricing power',b:'+959% in a year; optics is historically boom-bust'},
+{l:4,t:'APH',n:'Amphenol',c:189,p:78,s:'<b>$7.6B</b> Q1 rev (+58%) · orders $9.4B (b2b 1.24) · IT-datacom = 41% of sales',r:'High-speed copper, fiber and power connectors inside AI servers — plus CommScope\'s fiber plant.',g:'Diversified compounder with outsized AI leverage',b:'A hyperscaler pause now hits 41% of revenue'},
+/* 5 · Systems & Data Centers */
+{l:5,t:'DELL',n:'Dell Technologies',c:259,p:243,s:'<b>$24.4B</b> AI-server orders in one quarter · backlog ~$51B · FY27 AI rev ~$60B',r:'The largest branded AI-server OEM — NVIDIA racks for neoclouds, sovereigns, enterprises.',g:'Unmatched order visibility (5,000+ AI customers)',b:'Memory shortages cap shipments and margins'},
+{l:5,t:'SMCI',n:'Super Micro',c:18.5,p:-31,s:'<b>$10.2B</b> FQ3 rev (+123%) · AI racks >80% of revenue · GM only ~10%',r:'Fast-turn designer of liquid-cooled GPU servers — first to each NVIDIA platform.',g:'Speed-to-market on new platforms',b:'Thin margins, lumpy mega-orders, share loss to Dell'},
+{l:5,t:'CLS',n:'Celestica',c:44,p:225,s:'<b>$4.05B</b> Q1 rev (+53%) · FY26 raised to $19B · 800G→1.6T switch ramps',r:'The ODM building hyperscalers\' AI switches and compute — the quiet beneficiary of every network upgrade.',g:'Design wins across 800G/1.6T and CPO programs',b:'EMS margins; customer concentration'},
+{l:5,t:'VRT',n:'Vertiv',c:116,p:172,s:'<b>$2.65B</b> Q1 rev (+30%) · backlog $15B (+109%) · 800VDC racks with NVIDIA',r:'Power and cooling inside the AI data center — UPS, busbar, liquid cooling, services.',g:'2.9× book-to-bill; co-designing next-gen racks',b:'Beta 2.0 expectations; EMEA fell 29%'},
+{l:5,t:'ETN',n:'Eaton',c:154,p:23,s:'<b>$7.5B</b> Q1 rev (+17%) · electrical backlog <b>+48%</b> · DC orders ~+240%',r:'The electrical room of the data center: switchgear, distribution, UPS, now thermal (Boyd).',g:'12 years of demand at 2025 build rates (mgmt math)',b:'Margin squeeze while digesting $11B of deals'},
+{l:5,t:'EQIX',n:'Equinix',c:104,p:18,s:'Record bookings · <b>~60%</b> of largest deals AI-related · FY26 raised',r:'The interconnection hub where clouds, carriers and AI inference meet — 8 of top-10 model providers on-platform.',g:'Network-effect moat commands premium pricing',b:'Power and grid interconnects gate growth'},
+{l:5,t:'DLR',n:'Digital Realty',c:66,p:5,s:'<b>200MW</b> single AI lease (largest ever) · 1.2GW pipeline, 61% pre-leased',r:'Wholesale data-center REIT supplying powered shells for AI training and inference.',g:'$1.8B contracted backlog at 11%+ yields',b:'REIT cost of capital vs hyperscaler bargaining power'},
+/* 6 · Power & Energy */
+{l:6,t:'GEV',n:'GE Vernova',c:252,p:91,s:'Turbine queue <b>~100 GW</b> · slots ~sold out toward 2030 · Q1 orders +71%',r:'The picks-and-shovels power OEM: heavy-duty gas turbines, grid equipment, nuclear services.',g:'~2.5 years of revenue in backlog, with pricing power',b:'Delivering into a possible capex air pocket at a premium multiple'},
+{l:6,t:'CEG',n:'Constellation Energy',c:90,p:-15,s:'Q1 rev <b>+64%</b> (Calpine) · Crane/TMI restart H2 2027 for Microsoft · Meta 1.1GW',r:'Largest US clean-baseload owner signing hyperscaler nuclear PPAs (Microsoft, Meta).',g:'147M MWh/yr of nuclear output to contract at premiums',b:'PJM regulatory friction is gating new data-center deals'},
+{l:6,t:'VST',n:'Vistra',c:50,p:-12,s:'Q1 rev <b>+43%</b> · Meta nuclear PPAs <b>2.6 GW</b> (Perry, Davis-Besse) · +5.5GW gas M&A',r:'Texas-based merchant generator selling 20-year nuclear power to Meta\'s AI buildout.',g:'Newly investment-grade; ~30% of shares retired since 2021',b:'Retail arm swings with weather; stock lagging the story'},
+{l:6,t:'NEE',n:'NextEra Energy',c:179,p:17,s:'Backlog record <b>33 GW</b> · 30+ data-center hubs · picked for 9.5 GW US-Japan gas build',r:'The renewables-and-storage giant supplying data-center load at utility scale.',g:'Biggest clean-energy machine in America',b:'9.5GW selection still lacks definitive agreements; rate/tax policy'},
+{l:6,t:'TLN',n:'Talen Energy',c:16,p:29,s:'AWS PPA: <b>1.92 GW</b> nuclear through 2042 (~$18B) · Q1 EBITDA +137%',r:'Independent power producer whose Susquehanna plant anchors Amazon\'s Pennsylvania AI campus.',g:'Contracted nuclear + full PJM capacity-price leverage',b:'Single-asset concentration; fresh $4B of debt'},
+{l:6,t:'OKLO',n:'Oklo',c:10,p:-15,s:'<b>~14 GW</b> pipeline (Switch 12, Meta 1.2, Equinix 0.5) · first reactor: 2028 · $2.5B cash',r:'SMR developer planning to build-own-operate small fast reactors sold straight to data centers.',g:'Multi-year cash runway; NRC milestones landing',b:'Pre-revenue; pipeline is LOIs, not PPAs; timeline already slipped'},
+/* 7 · Clouds */
+{l:7,t:'MSFT',n:'Microsoft',c:2900,s:'Azure <b>+40%</b> · AI run-rate $37B (+123%) · RPO <b>$627B</b> · capex ~$190B',r:'The enterprise toll road: Azure + Copilot (20M paid seats) + 27% of OpenAI + Anthropic on Azure.',g:'Wins whichever lab wins',b:'$190B/yr must convert to earnings'},
+{l:7,t:'AMZN',n:'Amazon',c:2600,s:'AWS <b>+28%</b> (fastest in 15 qtrs) · backlog $364B + >$100B Anthropic · capex ~$200B',r:'The neutral utility — every model for rent, plus >$20B/yr of its own Trainium/Graviton silicon.',g:'Custom silicon proven at volume; Anthropic alliance',b:'Free cash flow collapsed ~95% under capex'},
+{l:7,t:'GOOGL',n:'Alphabet',c:4370,s:'Cloud <b>+63%</b> · backlog $462B · TPUs now sold externally · capex $180–190B',r:'The only full-stack player: TPUs → Gemini → Search/Android/YouTube. #2 company on Earth.',g:'Vertical integration nobody else has',b:'Antitrust appeals; AI answers vs search economics'},
+{l:7,t:'ORCL',n:'Oracle',c:530,s:'RPO <b>$638B</b> (+363%) · OCI +93% · FCF negative · raising ~$40B more',r:'The leveraged bet: borrowed ~$125B+ to build Stargate-scale capacity, largely for OpenAI.',g:'Contracted growth no one else can show',b:'One money-losing mega-customer; the market\'s AI-credit proxy (−47% from peak)'},
+{l:7,t:'CRWV',n:'CoreWeave',c:52,s:'<b>$99.4B</b> backlog vs $52B market cap · Q1 rev +112% · >3.5GW contracted',r:'The flagship neocloud — GPUs only, financed with GPU-collateralized debt.',g:'OpenAI, Meta, Google and Anthropic all customers',b:'Debt against fast-aging collateral'},
+{l:7,t:'NBIS',n:'Nebius',c:60,p:367,s:'Q1 rev <b>+684%</b> · Microsoft $17.4B contract · backlog ~$50B · capex $20–25B',r:'Pure-play neocloud renting NVIDIA clusters to Microsoft and Meta; 3.5GW power contracted.',g:'"Everything we build, we sell"',b:'$20–25B capex on <$1B trailing revenue'},
+{l:7,t:'IREN',n:'IREN',c:21,p:649,s:'Microsoft <b>$9.7B</b> GB300 deal · NVIDIA $5.6B combined · ARR $3.1B contracted',r:'Bitcoin-miner-turned-neocloud converting owned cheap power into contracted GPU cloud.',g:'Anchor contracts on owned land and power',b:'GAAP losses; $5.8B of Dell GPUs to fund'},
+/* 8 · Models */
+{l:8,t:'PRIVATE',n:'OpenAI',c:852,cn:'$852B · Mar 2026 round',s:'<b>~900M</b> weekly users · >$25B annualized rev · confidential IPO filed (>$1T target)',r:'ChatGPT — the consumer giant. Compute reframed to ~$600B through 2030; Microsoft 27%, Foundation 26%.',g:'Strongest consumer brand in AI',b:'Multi-billion losses into 2028+; every partner is a rival'},
+{l:8,t:'PRIVATE',n:'Anthropic',c:965,cn:'$965B · May 2026 Series H',s:'<b>$30B+</b> run-rate (Apr) · ~80% enterprise · Claude 5 tops leaderboards (Jun 9)',r:'The enterprise-and-safety lab — most valuable startup on Earth; buys compute from AWS, Google AND Microsoft.',g:'Coding/agents leadership; captive to no single cloud',b:'Growth figures company-stated pending IPO filing'},
+{l:8,t:'(GOOGL)',n:'Google DeepMind',c:null,cn:'inside Alphabet',s:'Gemini 3.5 (I/O 2026) · ~1B-user app trajectory · 3.2 quadrillion tokens/mo',r:'The deepest research bench in AI — and it needs nobody\'s chips or cloud. Powers Apple\'s new Siri.',g:'TPUs + research pedigree + distribution',b:'Must monetize without breaking Search'},
+{l:8,t:'(META)',n:'Meta Superintelligence Labs',c:null,cn:'inside Meta',s:'<b>Muse Spark</b> (Apr 2026) — closed-source · the open-weights era ended here',r:'Zuckerberg\'s $14.3B talent acquisition built a lab that abandoned Llama\'s openness for frontier secrecy.',g:'Unlimited compute and 3.5B users to deploy into',b:'Public org turbulence; open-source goodwill spent'},
+{l:8,t:'PRIVATE',n:'xAI (SpaceX)',c:250,cn:'$250B · Feb 2026 merger',s:'Colossus 2: first <b>>1GW</b> training cluster · merged into SpaceX ($1.25T) pre-IPO',r:'The fastest infrastructure builder alive, now fused with rockets, Starlink and Tesla\'s orbit.',g:'Gigawatt compute + Musk capital machine',b:'Grok 5 delayed; deepfake-scandal litigation'},
+{l:8,t:'PRIVATE',n:'Mistral AI',c:14,cn:'~€12B+ · 2025–26 rounds',s:'Mistral 3 open weights · ASML is anchor shareholder (~11%) · 200MW EU compute',r:'Europe\'s champion — sovereignty as strategy, efficiency as necessity.',g:'EU procurement tailwind; developer goodwill',b:'A fraction of US labs\' compute'},
+{l:8,t:'PRIVATE',n:'DeepSeek',c:null,cn:'undisclosed',s:'V4: <b>1.6T params</b>, MIT license, ~5–30× cheaper APIs · trains on NVIDIA, infers on Ascend',r:'China\'s open-weights shockmaker — the Jan 2025 release that cut $600B off NVIDIA in a day.',g:'Price-performance disruption at global scale',b:'Chip access is the ceiling'},
+/* 9 · Applications */
+{l:9,t:'AAPL',n:'Apple',c:4340,s:'<b>$111B</b> FQ2 rev (+17%) · Siri rebuilt on Gemini (~$1B/yr) · capex ~$14B',r:'The patient distributor: 2B+ devices of edge AI, rented frontier brains, near-record stock.',g:'Owns the customer and the device',b:'Assistant brain rented from a direct rival'},
+{l:9,t:'META',n:'Meta Platforms',c:1440,s:'<b>$56.3B</b> Q1 rev (+33%) · capex $125–145B · 8,000 AI-restructuring layoffs',r:'AI\'s biggest internal customer — recommendations and gen-AI ads monetizing 3.5B daily users.',g:'Proven AI→revenue loop in ads',b:'Hyperscaler spending without a cloud business'},
+{l:9,t:'TSLA',n:'Tesla',c:1500,s:'Robotaxis unsupervised in <b>3 Texas metros</b> · AI5 taped out · Optimus line at Fremont',r:'The physical-AI wager: cars, robots and chips as one vertically-integrated bet.',g:'Real-world driving data moat',b:'Waymo is far ahead today; revenue "minimal until 2027"'},
+{l:9,t:'PLTR',n:'Palantir',c:314,s:'<b>+85%</b> Q1 revenue · US commercial +133% · Rule of 40 score: 145',r:'The purest application-layer AI bet — operational AI for governments and enterprises.',g:'Growth + margins without software peer',b:'~100× forward sales; perfection pre-priced'},
+{l:9,t:'CRM',n:'Salesforce',c:136,s:'Agentforce ARR <b>$1.2B</b> (+205%) · stock roughly halved in a year',r:'The agent-disruption test case: AI products scaling fast while the multiple collapses.',g:'Distribution + data in every sales org',b:'Agents vs seat-based pricing'},
+{l:9,t:'NOW',n:'ServiceNow',c:106,s:'Subscriptions <b>+22%</b> · 2026 AI target raised to $1.5B · $1M+ AI deals +130%',r:'Enterprise workflows with AI attached — punished by the same SaaS fears anyway.',g:'AI attached to sticky workflows',b:'Agent-native challengers; sector derating'}
+];
+
+const LAYERS = [
+ {name:'Design & Equipment',d:'lithography · etch · inspection · EDA · IP — $139B of tools selling in 2026',c:'var(--l0)',h:'#L0'},
+ {name:'Fabrication',d:'TSMC: ~70% of foundry at a 50.5% net margin; one island at the center',c:'var(--l1)',h:'#L1'},
+ {name:'Memory & Storage',d:'HBM oligopoly + HDD duopoly, all sold out — DRAM +95% in a single quarter',c:'var(--l1)',h:'#L2'},
+ {name:'Chips & Accelerators',d:'NVIDIA ($75B DC revenue/qtr) and the resistance — custom silicon, AMD, Intel',c:'var(--l2)',h:'#L3'},
+ {name:'Networking & Optics',d:'switches · lasers · cables — the nervous system; EML lasers literally sold out',c:'var(--l0)',h:'#L4'},
+ {name:'Systems & Data Centers',d:'racks · power rooms · cooling · landlord REITs — Dell\'s AI backlog alone ~$51B',c:'var(--l3)',h:'#L5'},
+ {name:'Power & Energy',d:'turbines queued toward 2030 · nuclear PPAs for Big Tech · grid politics',c:'var(--l4)',h:'#L6'},
+ {name:'Clouds',d:'$725B/yr of capex becomes rentable intelligence; $1.4T+ of contracted backlog',c:'var(--l3)',h:'#L7'},
+ {name:'Models & Intelligence',d:'capex becomes capability, sold by the token — Anthropic alone now $965B',c:'var(--l4)',h:'#L8'},
+ {name:'Applications & Devices',d:'assistants · ads · robots · the agent question — 3.5B daily users at Meta alone',c:'var(--l5)',h:'#L9'}
+];
+
+/* annualized revenue run-rates, $B (latest qtr ×4, or FY guidance midpoint; labs = disclosed run-rates) */
+const REV = {ASML:38,'Applied Materials':32,'Lam Research':23,KLA:14,Synopsys:9,Cadence:6,Arm:5,
+ TSMC:144,'Samsung Electronics':388,SMIC:10,
+ 'SK Hynix':152,Micron:96,'Western Digital':13,Seagate:12,
+ NVIDIA:326,Broadcom:89,AMD:41,Intel:54,Qualcomm:42,Marvell:10,'Monolithic Power':3,
+ 'Arista Networks':11.5,'Astera Labs':1.2,Coherent:7.2,Ciena:6.3,Credo:1.7,Lumentum:3.9,Amphenol:30,
+ 'Dell Technologies':167,'Super Micro':40,Celestica:19,Vertiv:14,Eaton:30,Equinix:10,'Digital Realty':7,
+ 'GE Vernova':45,'Constellation Energy':44,Vistra:23,'NextEra Energy':27,'Talen Energy':4.5,Oklo:0,
+ Microsoft:332,Amazon:726,Alphabet:440,Oracle:77,CoreWeave:12.5,Nebius:3.2,IREN:0.6,
+ OpenAI:25,Anthropic:30,'Mistral AI':0.5,
+ Apple:445,'Meta Platforms':225,Tesla:90,Palantir:7.7,Salesforce:44.5,ServiceNow:14};
+
+/* ============ render ============ */
+const fmtCap = x => x==null ? '—' : (x>=1000 ? '$'+(x/1000).toFixed(2)+'T' : '$'+(x%1?x.toFixed(1):x)+'B');
+const fmtRev = x => x>=1000 ? '$'+(x/1000).toFixed(2)+'T/yr' : '~$'+Math.round(x)+'B/yr';
+let totV=0, totR=0;
+document.getElementById('machineDiagram').innerHTML = LAYERS.map((L,i)=>{
+  const cos = C.filter(c=>c.l===i);
+  const val = cos.reduce((a,c)=>a+(c.c||0),0);
+  const rev = cos.reduce((a,c)=>a+(REV[c.n]||0),0);
+  const SHORT = {'Google DeepMind':'DeepMind','Meta Superintelligence Labs':'MSL'};
+  const exV = cos.filter(c=>c.c==null).map(c=>SHORT[c.n]||c.n.split(' ')[0]);
+  const exR = cos.filter(c=>REV[c.n]==null).map(c=>SHORT[c.n]||c.n.split(' ')[0]);
+  totV+=val; totR+=rev;
+  return `<div class="mrow" style="--lc:${L.c}"><a href="${L.h}">
+   <div class="ml"><div class="t">${i+1} · ${L.name}</div></div>
+   <div class="mm">${L.d}</div>
+   <div class="mr"><div class="v">${fmtCap(val)}</div><div class="k">combined value${exV.length?' · ex '+exV.join(', '):''}</div>
+     <div class="v rev">${fmtRev(rev)}</div><div class="k">revenue run-rate${exR.length&&i===8?' · disclosed only':''}</div></div></a></div>`;
+}).join('') + `<div class="mrow mtotal" style="--lc:var(--gold)"><a href="#layers">
+   <div class="ml"><div class="t">Σ · The whole machine</div></div>
+   <div class="mm">61 companies. Whole-company figures, double-counting by design — Apple's revenue pays TSMC's, which pays ASML's. The AI-native slice of all this is the ~$70B in §02.</div>
+   <div class="mr"><div class="v">${fmtCap(totV)}</div><div class="k">combined value</div>
+     <div class="v rev">${fmtRev(totR)}</div><div class="k">revenue run-rate</div></div></a></div>`;
+
+const layerColors = ['var(--l0)','var(--l1)','var(--l1)','var(--l2)','var(--l0)','var(--l3)','var(--l4)','var(--l3)','var(--l4)','var(--l5)'];
+document.querySelectorAll('.cards').forEach(holder=>{
+  const li = +holder.dataset.layer;
+  holder.innerHTML = C.filter(c=>c.l===li).map(c=>`
+   <details class="card" style="--lc:${layerColors[li]}">
+     <summary>
+       <div class="tk">${c.t}</div>
+       ${c.p!=null?`<div class="perf ${c.p>=0?'up':'dn'}">${c.p>=0?'+':''}${c.p}%<span style="opacity:.55;font-weight:400"> 12mo</span></div>`:''}
+       <div class="nm">${c.n}</div>
+       <div class="cap">${c.cn? c.cn : fmtCap(c.c)+' mkt cap'}</div>
+       <div class="statline">${c.s}</div>
+     </summary>
+     <div class="inner">${c.r}
+       <div class="sr g"><b>▲ strength</b> — ${c.g}</div>
+       <div class="sr r"><b>▼ risk</b> — ${c.b}</div>
+     </div>
+   </details>`).join('');
+});
+
+/* ============ calculators ============ */
+const $id = s=>document.getElementById(s);
+function bind(id, fn){ const el=$id(id); const f=()=>{ el.style.setProperty('--fill', (100*(el.value-el.min)/(el.max-el.min))+'%'); fn(); }; el.addEventListener('input',f); f(); }
+const US_TWH=4300, HOME=10.8, TURB=0.5, TMI=0.835;
+
+function powerCalc(){
+  const capex=+$id('pCapex').value, cost=+$id('pCost').value, util=+$id('pUtil').value/100, yrs=+$id('pYears').value;
+  $id('pCapexV').textContent='$'+capex+'B'; $id('pCostV').textContent='$'+cost+'B'; $id('pUtilV').textContent=Math.round(util*100)+'%'; $id('pYearsV').textContent=yrs+' yr'+(yrs>1?'s':'');
+  const gw=capex/cost, twh=gw*8.76*util;
+  $id('oGW').textContent=gw.toFixed(1)+' GW'; $id('oGWs').textContent='≈ '+(gw/1.2).toFixed(1)+'× Stargate Abilene (1.2 GW)';
+  $id('oTWh').textContent=twh.toFixed(0)+' TWh'; $id('oTWhs').textContent=(100*twh/US_TWH).toFixed(1)+'% of US generation · '+(twh*1e6/HOME/1e6).toFixed(1)+'M homes';
+  $id('oTurb').textContent='~'+Math.round(gw/TURB); $id('oTMI').textContent='~'+Math.round(gw/TMI);
+  const cumTWh=twh*yrs, cumGW=gw*yrs; $id('oYrLab').textContent=yrs;
+  $id('oCum').textContent=cumGW.toFixed(0)+' GW · '+cumTWh.toFixed(0)+' TWh/yr';
+  const pct=100*cumTWh/945;
+  $id('oVerdict').innerHTML = pct<70 ? '<span class="badge ok">WITHIN IEA ENVELOPE</span>'
+    : (pct<100 ? '<span class="badge ok" style="filter:hue-rotate(-30deg)">MOST OF IEA 2030 TOTAL</span>' : '<span class="badge no">EXCEEDS IEA 2030 WORLD TOTAL</span>');
+  $id('oCums').textContent='IEA projects ALL global data centers ≈ 945 TWh by 2030. Your scenario alone = '+pct.toFixed(0)+'% of that.';
+}
+['pCapex','pCost','pUtil','pYears'].forEach(i=>bind(i,powerCalc));
+
+function gapCalc(){
+  const spend=+$id('gSpend').value, life=+$id('gLife').value, rev0=+$id('gRev0').value, g0=+$id('gGrow').value/100;
+  $id('gSpendV').textContent='$'+spend+'B/yr'; $id('gLifeV').textContent=life+' yrs'; $id('gRev0V').textContent='$'+rev0+'B'; $id('gGrowV').textContent=Math.round(g0*100)+'%';
+  const yrs=10, rev=[rev0], cost=[]; let g=g0;
+  for(let t=1;t<=yrs;t++){ rev.push(rev[t-1]*(1+g)); g*=0.85; }
+  for(let t=0;t<=yrs;t++){ cost.push(Math.min(t+1,life)*spend/life*1.2); }
+  let cross=-1; for(let t=0;t<=yrs;t++){ if(rev[t]>=cost[t]){cross=t;break;} }
+  $id('gCost').textContent='$'+(spend*1.2).toFixed(0)+'B/yr';
+  $id('gNeed').textContent='$'+cost[4].toFixed(0)+'B';
+  if(cross<0){ $id('gVerdict').innerHTML='Doesn’t close by 2036 <span class="badge no">FAIL</span>'; $id('gVerdictS').textContent='At these settings the depreciation treadmill outruns revenue for a decade. Growth must stay higher for longer, spend must fall, or the kit must last longer.'; }
+  else if(cross===0){ $id('gVerdict').innerHTML='Already closed <span class="badge ok">PASS</span>'; $id('gVerdictS').textContent='Generous revenue counting plus long depreciation — the most bullish corner of the map.'; }
+  else { $id('gVerdict').innerHTML='Math closes in '+(2026+cross)+' <span class="badge ok">PASS</span>'; $id('gVerdictS').textContent='Revenue overtakes annualized infrastructure cost after '+cross+' year'+(cross>1?'s':'')+' of compounding (growth fading 15%/yr).'; }
+  const W=460,H=130,pad=8, max=Math.max(...rev,...cost)*1.06;
+  const X=t=>pad+(W-2*pad)*t/yrs, Y=v=>H-pad-(H-2*pad)*v/max;
+  const path=a=>a.map((v,t)=>(t?'L':'M')+X(t).toFixed(1)+' '+Y(v).toFixed(1)).join(' ');
+  const cs=getComputedStyle(document.documentElement);
+  $id('gapChart').innerHTML =
+   `<path d="${path(cost)}" fill="none" stroke="${cs.getPropertyValue('--bad').trim()}" stroke-width="2.5" stroke-dasharray="6 4"/>`+
+   `<path d="${path(rev)}" fill="none" stroke="${cs.getPropertyValue('--good').trim()}" stroke-width="2.5"/>`+
+   (cross>=0?`<circle cx="${X(cross)}" cy="${Y(rev[cross])}" r="5" fill="${cs.getPropertyValue('--good').trim()}"/>`:'')+
+   `<text x="${pad}" y="12" font-family="JetBrains Mono" font-size="9" fill="${cs.getPropertyValue('--faint').trim()}">2026 → 2036 · solid: revenue · dashed: annualized cost</text>`;
+}
+['gSpend','gLife','gRev0','gGrow'].forEach(i=>bind(i,gapCalc));
+
+function queryCalc(){
+  const wh=+$id('qWh').value, per=+$id('qPer').value, users=+$id('qUsers').value;
+  $id('qWhV').textContent=wh.toFixed(2)+' Wh'; $id('qPerV').textContent=per; $id('qUsersV').textContent=users.toFixed(1)+'B';
+  const twh=wh*per*users*1e9*365/1e12;
+  $id('qTWh').textContent=twh.toFixed(1)+' TWh';
+  $id('qTWhS').textContent=(100*twh/US_TWH).toFixed(2)+'% of US generation';
+  $id('qHomes').textContent=(twh*1e6/HOME/1e6).toFixed(1)+'M';
+  $id('qCtx').textContent='Chat at this scale = '+(100*twh/945).toFixed(1)+'% of the IEA’s entire 2030 data-center projection. The rest is training, video, agents — the loads that actually built the Power Wall.';
+}
+['qWh','qPer','qUsers'].forEach(i=>bind(i,queryCalc));
+
+/* ============ chrome ============ */
+const root=document.documentElement;
+if(localStorage.getItem('machineTheme')==='dark') root.classList.add('dark');
+$id('themeBtn').onclick=()=>{ root.classList.toggle('dark'); localStorage.setItem('machineTheme', root.classList.contains('dark')?'dark':'light'); gapCalc(); };
+addEventListener('scroll',()=>{
+  const h=document.documentElement, p=h.scrollTop/(h.scrollHeight-h.clientHeight);
+  document.getElementById('progress').style.width=(p*100)+'%';
+},{passive:true});
+const navAs=[...document.querySelectorAll('#navlinks a')];
+const io=new IntersectionObserver(es=>{ es.forEach(e=>{ if(e.isIntersecting){ navAs.forEach(a=>a.classList.toggle('on', a.getAttribute('href')==='#'+e.target.id)); } }); },{rootMargin:'-25% 0px -60% 0px'});
+document.querySelectorAll('section[id]').forEach(s=>io.observe(s));
+</script>
+</body>
+</html>
